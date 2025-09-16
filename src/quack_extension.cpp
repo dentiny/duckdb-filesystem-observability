@@ -3,40 +3,55 @@
 #include "quack_extension.hpp"
 #include "duckdb.hpp"
 #include "duckdb/common/exception.hpp"
+#include "duckdb/common/opener_file_system.hpp"
 #include "duckdb/common/string_util.hpp"
 #include "duckdb/function/scalar_function.hpp"
 #include "duckdb/main/extension_util.hpp"
 #include <duckdb/parser/parsed_data/create_scalar_function_info.hpp>
-
-// OpenSSL linked through vcpkg
-#include <openssl/opensslv.h>
+#include "observability_filesystem.hpp"
 
 namespace duckdb {
 
-inline void QuackScalarFun(DataChunk &args, ExpressionState &state, Vector &result) {
-	auto &name_vector = args.data[0];
-	UnaryExecutor::Execute<string_t, string_t>(name_vector, result, args.size(), [&](string_t name) {
-		return StringVector::AddString(result, "Quack " + name.GetString() + " 🐥");
-	});
+// Current duckdb instance; store globally to retrieve filesystem instance inside of it.
+static weak_ptr<DatabaseInstance> duckdb_instance;
+
+// Wrap the filesystem with extension cache filesystem.
+// Throw exception if the requested filesystem hasn't been registered into duckdb instance.
+static void WrapCacheFileSystem(const DataChunk &args, ExpressionState &state, Vector &result) {
+	D_ASSERT(args.ColumnCount() == 1);
+	const string filesystem_name = args.GetValue(/*col_idx=*/0, /*index=*/0).ToString();
+
+	// duckdb instance has a opener filesystem, which is a wrapper around virtual filesystem.
+	auto inst = duckdb_instance.lock();
+	if (!inst) {
+		throw InternalException("DuckDB instance no longer alive");
+	}
+	auto &opener_filesystem = inst->GetFileSystem().Cast<OpenerFileSystem>();
+	auto &vfs = opener_filesystem.GetFileSystem();
+	auto internal_filesystem = vfs.ExtractSubSystem(filesystem_name);
+	if (internal_filesystem == nullptr) {
+		throw InvalidInputException("Filesystem %s hasn't been registered yet!", filesystem_name);
+	}
+
+	auto observability_filesystem = make_uniq<ObservabilityFileSystem>(std::move(internal_filesystem));
+	vfs.RegisterSubSystem(std::move(observability_filesystem));
+
+	constexpr bool SUCCESS = true;
+	result.Reference(Value(SUCCESS));
 }
 
-inline void QuackOpenSSLVersionScalarFun(DataChunk &args, ExpressionState &state, Vector &result) {
-	auto &name_vector = args.data[0];
-	UnaryExecutor::Execute<string_t, string_t>(name_vector, result, args.size(), [&](string_t name) {
-		return StringVector::AddString(result, "Quack " + name.GetString() + ", my linked OpenSSL version is " +
-		                                           OPENSSL_VERSION_TEXT);
-	});
-}
-
-static void LoadInternal(DatabaseInstance &instance) {
-	// Register a scalar function
-	auto quack_scalar_function = ScalarFunction("quack", {LogicalType::VARCHAR}, LogicalType::VARCHAR, QuackScalarFun);
-	ExtensionUtil::RegisterFunction(instance, quack_scalar_function);
-
-	// Register another scalar function
-	auto quack_openssl_version_scalar_function = ScalarFunction("quack_openssl_version", {LogicalType::VARCHAR},
-	                                                            LogicalType::VARCHAR, QuackOpenSSLVersionScalarFun);
-	ExtensionUtil::RegisterFunction(instance, quack_openssl_version_scalar_function);
+static void LoadInternal(DatabaseInstance &instance) {	
+	// Register a function to wrap all duckdb-vfs-compatible filesystems. By default only httpfs filesystem instances
+	// are wrapped. Usage for the target filesystem can be used as normal.
+	//
+	// Example usage:
+	// D. LOAD azure;
+	// -- Wrap filesystem with its name.
+	// D. SELECT observefs_wrap_cache_filesystem('AzureBlobStorageFileSystem');
+	ScalarFunction wrap_cache_filesystem_function("observefs_wrap_cache_filesystem",
+	                                              /*arguments=*/ {LogicalTypeId::VARCHAR},
+	                                              /*return_type=*/LogicalTypeId::BOOLEAN, WrapCacheFileSystem);
+	ExtensionUtil::RegisterFunction(instance, wrap_cache_filesystem_function);
 }
 
 void QuackExtension::Load(DuckDB &db) {
