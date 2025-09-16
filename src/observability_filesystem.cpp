@@ -10,10 +10,10 @@ std::string ObservabilityFileSystem::GetName() const {
 }
 
 void ObservabilityFileSystem::ClearObservabilityData() {
-    metrics_collector.Reset();
+	metrics_collector.Reset();
 }
 std::string ObservabilityFileSystem::GetHumanReadableStats() {
-    metrics_collector.GetHumanReadableStats();
+	metrics_collector.GetHumanReadableStats();
 }
 
 void ObservabilityFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) {

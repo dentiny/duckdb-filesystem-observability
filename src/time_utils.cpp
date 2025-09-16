@@ -17,4 +17,4 @@ time_t DuckdbTimestampToTimeT(timestamp_t timestamp) {
 	return result;
 }
 
-}  // namespace duckdb
+} // namespace duckdb

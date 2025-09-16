@@ -9,23 +9,23 @@ namespace duckdb {
 
 class MetricsCollector {
 public:
-    MetricsCollector();
-    ~MetricsCollector() = default;
+	MetricsCollector();
+	~MetricsCollector() = default;
 
-    std::string GenerateOperId() const;
-    void RecordOperationStart(OperationLatencyHistogram::IoOperation io_oper, const std::string &oper_id);
+	std::string GenerateOperId() const;
+	void RecordOperationStart(OperationLatencyHistogram::IoOperation io_oper, const std::string &oper_id);
 	void RecordOperationEnd(OperationLatencyHistogram::IoOperation io_oper, const std::string &oper_id);
 
-    std::string GetHumanReadableStats();
+	std::string GetHumanReadableStats();
 
-    // Reset all recorded metrics.
-    void Reset();
+	// Reset all recorded metrics.
+	void Reset();
 
 private:
-    // TODO(hjiang): Add per-bucket historgram metrics.
-    //
-    // Overall latency histogram.
-    unique_ptr<OperationLatencyHistogram> overall_latency_histogram_;
+	// TODO(hjiang): Add per-bucket historgram metrics.
+	//
+	// Overall latency histogram.
+	unique_ptr<OperationLatencyHistogram> overall_latency_histogram_;
 };
 
-}  // namespace duckdb
+} // namespace duckdb

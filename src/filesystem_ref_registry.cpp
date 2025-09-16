@@ -10,7 +10,7 @@ namespace duckdb {
 }
 
 void ObservabilityFsRefRegistry::Register(ObservabilityFileSystem *fs) {
-    // TODO(hjiang): Add assertion that filesystem cannot be repeatedly registered.
+	// TODO(hjiang): Add assertion that filesystem cannot be repeatedly registered.
 	observability_filesystems.emplace_back(fs);
 }
 

@@ -27,10 +27,10 @@ public:
 		return internal_filesystem.get();
 	}
 
-    // Clear observability data.
-    void ClearObservabilityData();
-    // Get human-readable metrics stats.
-    std::string GetHumanReadableStats();
+	// Clear observability data.
+	void ClearObservabilityData();
+	// Get human-readable metrics stats.
+	std::string GetHumanReadableStats();
 
 	// Doesn't update file offset (which acts as `PRead` semantics).
 	void Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) override;
@@ -119,8 +119,8 @@ public:
 private:
 	// Used to access remote files.
 	unique_ptr<FileSystem> internal_filesystem;
-    // Overall histogram.
-    MetricsCollector metrics_collector;
+	// Overall histogram.
+	MetricsCollector metrics_collector;
 };
 
 } // namespace duckdb

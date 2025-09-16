@@ -47,13 +47,25 @@ public:
 		return max_encountered_;
 	}
 
-    // Get rough estimation for quantile.
-    double p50() const { return Quantile(0.50); }
-    double p75() const { return Quantile(0.75); }
-    double p90() const { return Quantile(0.90); }
-    double p95() const { return Quantile(0.95); }
-    double p99() const { return Quantile(0.99); }
-    double p100() const { return max_encountered_; }
+	// Get rough estimation for quantile.
+	double p50() const {
+		return Quantile(0.50);
+	}
+	double p75() const {
+		return Quantile(0.75);
+	}
+	double p90() const {
+		return Quantile(0.90);
+	}
+	double p95() const {
+		return Quantile(0.95);
+	}
+	double p99() const {
+		return Quantile(0.99);
+	}
+	double p100() const {
+		return max_encountered_;
+	}
 
 	// Get outliers for stat records.
 	const std::vector<double> outliers() const {
@@ -67,8 +79,8 @@ public:
 	void Reset();
 
 private:
-    // Notice it't not accurate based on bucketization.
-    double Quantile(double q) const;
+	// Notice it't not accurate based on bucketization.
+	double Quantile(double q) const;
 
 	const double min_val_;
 	const double max_val_;

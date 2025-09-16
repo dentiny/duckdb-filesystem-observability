@@ -85,7 +85,6 @@ static void LoadInternal(DatabaseInstance &instance) {
 	ObservabilityFsRefRegistry::Get().Register(observability_s3_filesystem.get());
 	fs.RegisterSubSystem(std::move(observability_s3_filesystem));
 
-
 	// Register a function to wrap all duckdb-vfs-compatible filesystems.
 	//
 	// Example usage:
@@ -93,8 +92,8 @@ static void LoadInternal(DatabaseInstance &instance) {
 	// -- Wrap filesystem with its name.
 	// D. SELECT observefs_wrap_filesystem('AzureBlobStorageFileSystem');
 	ScalarFunction wrap_filesystem_function("observabilityfs_wrap_filesystem",
-	                                              /*arguments=*/ {LogicalTypeId::VARCHAR},
-	                                              /*return_type=*/LogicalTypeId::BOOLEAN, WrapFileSystem);
+	                                        /*arguments=*/ {LogicalTypeId::VARCHAR},
+	                                        /*return_type=*/LogicalTypeId::BOOLEAN, WrapFileSystem);
 	ExtensionUtil::RegisterFunction(instance, wrap_filesystem_function);
 
 	// Register observability data cleanup function.
