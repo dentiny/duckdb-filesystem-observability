@@ -9,6 +9,13 @@ std::string ObservabilityFileSystem::GetName() const {
 	return compount_name;
 }
 
+void ObservabilityFileSystem::ClearObservabilityData() {
+    metrics_collector.Reset();
+}
+std::string ObservabilityFileSystem::GetHumanReadableStats() {
+    metrics_collector.GetHumanReadableStats();
+}
+
 void ObservabilityFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) {
 	internal_filesystem->Read(handle, buffer, nr_bytes, location);
 }

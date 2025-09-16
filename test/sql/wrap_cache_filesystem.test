@@ -1,0 +1,10 @@
+# name: test/sql/wrap_cache_filesystem.test
+# description: test cache httpfs extension wrap feature for filesystem instances other than those in httpfs.
+# group: [sql]
+
+require observabilityfs
+
+statement error
+SELECT observabilityfs_wrap_filesystem('unregistered_filesystem');
+----
+Invalid Input Error: Filesystem unregistered_filesystem hasn't been registered yet!

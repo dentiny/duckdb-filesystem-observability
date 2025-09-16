@@ -5,17 +5,43 @@
 #include "duckdb/common/opener_file_system.hpp"
 #include "duckdb/common/string_util.hpp"
 #include "duckdb/main/extension_util.hpp"
+#include "filesystem_ref_registry.hpp"
+#include "hffs.hpp"
+#include "httpfs_extension.hpp"
 #include "observabilityfs_extension.hpp"
 #include "observability_filesystem.hpp"
+#include "s3fs.hpp"
 
 namespace duckdb {
 
 // Current duckdb instance; store globally to retrieve filesystem instance inside of it.
 static weak_ptr<DatabaseInstance> duckdb_instance;
 
-// Wrap the filesystem with extension cache filesystem.
+// Clear observability data for all filesystems.
+static void ClearObservabilityData(const DataChunk &args, ExpressionState &state, Vector &result) {
+	auto observabilityfs_instances = ObservabilityFsRefRegistry::Get().GetAllObservabilityFs();
+	for (auto *cur_fs : observabilityfs_instances) {
+		cur_fs->ClearObservabilityData();
+	}
+
+	constexpr bool SUCCESS = true;
+	result.Reference(Value(SUCCESS));
+}
+
+static void GetProfileStats(const DataChunk &args, ExpressionState &state, Vector &result) {
+	string latest_stat;
+	const auto &observabilityfs_instances = ObservabilityFsRefRegistry::Get().GetAllObservabilityFs();
+	for (auto *cur_filesystem : observabilityfs_instances) {
+		latest_stat += StringUtil::Format("Current filesystem: %s\n", cur_filesystem->GetName());
+		latest_stat += cur_filesystem->GetHumanReadableStats();
+		latest_stat += "\n";
+	}
+	result.Reference(Value(std::move(latest_stat)));
+}
+
+// Wrap the filesystem with extension observability filesystem.
 // Throw exception if the requested filesystem hasn't been registered into duckdb instance.
-static void WrapCacheFileSystem(const DataChunk &args, ExpressionState &state, Vector &result) {
+static void WrapFileSystem(const DataChunk &args, ExpressionState &state, Vector &result) {
 	D_ASSERT(args.ColumnCount() == 1);
 	const string filesystem_name = args.GetValue(/*col_idx=*/0, /*index=*/0).ToString();
 
@@ -32,6 +58,7 @@ static void WrapCacheFileSystem(const DataChunk &args, ExpressionState &state, V
 	}
 
 	auto observability_filesystem = make_uniq<ObservabilityFileSystem>(std::move(internal_filesystem));
+	ObservabilityFsRefRegistry::Get().Register(observability_filesystem.get());
 	vfs.RegisterSubSystem(std::move(observability_filesystem));
 
 	constexpr bool SUCCESS = true;
@@ -39,20 +66,51 @@ static void WrapCacheFileSystem(const DataChunk &args, ExpressionState &state, V
 }
 
 static void LoadInternal(DatabaseInstance &instance) {
-	// Register a function to wrap all duckdb-vfs-compatible filesystems. By default only httpfs filesystem instances
-	// are wrapped. Usage for the target filesystem can be used as normal.
+	ObservabilityFsRefRegistry::Get().Reset();
+
+	// Register filesystem instance to instance.
+	auto &fs = instance.GetFileSystem();
+
+	// By default register all filesystem instances inside of httpfs.
+	auto observability_httpfs_filesystem = make_uniq<ObservabilityFileSystem>(make_uniq<HTTPFileSystem>());
+	ObservabilityFsRefRegistry::Get().Register(observability_httpfs_filesystem.get());
+	fs.RegisterSubSystem(std::move(observability_httpfs_filesystem));
+
+	auto observability_hf_filesystem = make_uniq<ObservabilityFileSystem>(make_uniq<HuggingFaceFileSystem>());
+	ObservabilityFsRefRegistry::Get().Register(observability_hf_filesystem.get());
+	fs.RegisterSubSystem(std::move(observability_hf_filesystem));
+
+	auto observability_s3_filesystem =
+	    make_uniq<ObservabilityFileSystem>(make_uniq<S3FileSystem>(BufferManager::GetBufferManager(instance)));
+	ObservabilityFsRefRegistry::Get().Register(observability_s3_filesystem.get());
+	fs.RegisterSubSystem(std::move(observability_s3_filesystem));
+
+
+	// Register a function to wrap all duckdb-vfs-compatible filesystems.
 	//
 	// Example usage:
 	// D. LOAD azure;
 	// -- Wrap filesystem with its name.
-	// D. SELECT observefs_wrap_cache_filesystem('AzureBlobStorageFileSystem');
-	ScalarFunction wrap_cache_filesystem_function("observabilityfs_wrap_cache_filesystem",
+	// D. SELECT observefs_wrap_filesystem('AzureBlobStorageFileSystem');
+	ScalarFunction wrap_filesystem_function("observabilityfs_wrap_filesystem",
 	                                              /*arguments=*/ {LogicalTypeId::VARCHAR},
-	                                              /*return_type=*/LogicalTypeId::BOOLEAN, WrapCacheFileSystem);
-	ExtensionUtil::RegisterFunction(instance, wrap_cache_filesystem_function);
+	                                              /*return_type=*/LogicalTypeId::BOOLEAN, WrapFileSystem);
+	ExtensionUtil::RegisterFunction(instance, wrap_filesystem_function);
+
+	// Register observability data cleanup function.
+	ScalarFunction clear_cache_function("observabilityfs_clear", /*arguments=*/ {},
+	                                    /*return_type=*/LogicalType::BOOLEAN, ClearObservabilityData);
+	ExtensionUtil::RegisterFunction(instance, clear_cache_function);
+
+	// Register profile collector metrics.
+	// A commonly-used SQL is `COPY (SELECT cache_httpfs_get_profile()) TO '/tmp/output.txt';`.
+	ScalarFunction get_profile_stats_function("observabilityfs_get_profile", /*arguments=*/ {},
+	                                          /*return_type=*/LogicalType::VARCHAR, GetProfileStats);
+	ExtensionUtil::RegisterFunction(instance, get_profile_stats_function);
 }
 
 void ObservabilityfsExtension::Load(DuckDB &db) {
+	duckdb_instance = db.instance;
 	LoadInternal(*db.instance);
 }
 std::string ObservabilityfsExtension::Name() {
