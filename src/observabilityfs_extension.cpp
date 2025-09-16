@@ -38,7 +38,7 @@ static void WrapCacheFileSystem(const DataChunk &args, ExpressionState &state, V
 	result.Reference(Value(SUCCESS));
 }
 
-static void LoadInternal(DatabaseInstance &instance) {	
+static void LoadInternal(DatabaseInstance &instance) {
 	// Register a function to wrap all duckdb-vfs-compatible filesystems. By default only httpfs filesystem instances
 	// are wrapped. Usage for the target filesystem can be used as normal.
 	//
