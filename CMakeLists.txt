@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 # Set extension name here
-set(TARGET_NAME quack)
+set(TARGET_NAME observabilityfs)
 
 # DuckDB's extension distribution supports vcpkg. As such, dependencies can be added in ./vcpkg.json and then
 # used in cmake with find_package. Feel free to remove or replace with other dependencies.
@@ -15,7 +15,8 @@ project(${TARGET_NAME})
 include_directories(src/include)
 
 set(EXTENSION_SOURCES
-  src/quack_extension.cpp
+  src/histogram.cpp
+  src/observabilityfs_extension.cpp
   src/observability_filesystem.cpp
 )
 
@@ -31,3 +32,9 @@ install(
   EXPORT "${DUCKDB_EXPORT_SET}"
   LIBRARY DESTINATION "${INSTALL_LIB_DIR}"
   ARCHIVE DESTINATION "${INSTALL_LIB_DIR}")
+
+# Test cases.
+include_directories(duckdb/third_party/catch)
+
+add_executable(test_histogram unit/test_histogram.cpp)
+target_link_libraries(test_histogram ${EXTENSION_NAME})
