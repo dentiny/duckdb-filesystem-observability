@@ -87,15 +87,18 @@ public:
 	vector<string> ListSubSystems() override {
 		return internal_filesystem->ListSubSystems();
 	}
-	bool CanHandleFile(const string &fpath) override;
-	
+	bool CanHandleFile(const string &fpath) override {
+        return internal_filesystem->CanHandleFile(fpath);
+    }
 	void Reset(FileHandle &handle) override {
 		internal_filesystem->Reset(handle);
 	}
 	idx_t SeekPosition(FileHandle &handle) override {
 		return internal_filesystem->SeekPosition(handle);
 	}
-	bool IsManuallySet() override;
+	bool IsManuallySet() override {
+        return internal_filesystem->IsManuallySet();
+    }
 	bool CanSeek() override {
 		return internal_filesystem->CanSeek();
 	}
