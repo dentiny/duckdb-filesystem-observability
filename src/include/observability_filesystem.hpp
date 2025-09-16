@@ -21,7 +21,7 @@ public:
 	~ObservabilityFileSystem() override {
 	}
 
-    // Get the internal filesystem for observabolity filesystem.
+	// Get the internal filesystem for observabolity filesystem.
 	FileSystem *GetInternalFileSystem() const {
 		return internal_filesystem.get();
 	}
@@ -38,7 +38,7 @@ public:
 	unique_ptr<FileHandle> OpenCompressedFile(unique_ptr<FileHandle> handle, bool write) override;
 	void Write(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) override;
 	int64_t Write(FileHandle &handle, void *buffer, int64_t nr_bytes) override;
-    void Truncate(FileHandle &handle, int64_t new_size) override;
+	void Truncate(FileHandle &handle, int64_t new_size) override;
 	bool DirectoryExists(const string &directory, optional_ptr<FileOpener> opener = nullptr) override;
 	void CreateDirectory(const string &directory, optional_ptr<FileOpener> opener = nullptr) override;
 	void RemoveDirectory(const string &directory, optional_ptr<FileOpener> opener = nullptr) override;
@@ -46,14 +46,14 @@ public:
 	               FileOpener *opener = nullptr) override;
 	void MoveFile(const string &source, const string &target, optional_ptr<FileOpener> opener = nullptr) override;
 	bool FileExists(const string &filename, optional_ptr<FileOpener> opener = nullptr) override;
-    void RemoveFile(const string &filename, optional_ptr<FileOpener> opener = nullptr) override;
-    vector<OpenFileInfo> Glob(const string &path, FileOpener *opener = nullptr) override;
-    void Seek(FileHandle &handle, idx_t location) override;
+	void RemoveFile(const string &filename, optional_ptr<FileOpener> opener = nullptr) override;
+	vector<OpenFileInfo> Glob(const string &path, FileOpener *opener = nullptr) override;
+	void Seek(FileHandle &handle, idx_t location) override;
 
-    // =============================================
-    // Delegate into internal filesystem instance.
-    // =============================================
-    //
+	// =============================================
+	// Delegate into internal filesystem instance.
+	// =============================================
+	//
 	bool Trim(FileHandle &handle, idx_t offset_bytes, idx_t length_bytes) override {
 		return internal_filesystem->Trim(handle, offset_bytes, length_bytes);
 	}
@@ -88,8 +88,8 @@ public:
 		return internal_filesystem->ListSubSystems();
 	}
 	bool CanHandleFile(const string &fpath) override {
-        return internal_filesystem->CanHandleFile(fpath);
-    }
+		return internal_filesystem->CanHandleFile(fpath);
+	}
 	void Reset(FileHandle &handle) override {
 		internal_filesystem->Reset(handle);
 	}
@@ -97,8 +97,8 @@ public:
 		return internal_filesystem->SeekPosition(handle);
 	}
 	bool IsManuallySet() override {
-        return internal_filesystem->IsManuallySet();
-    }
+		return internal_filesystem->IsManuallySet();
+	}
 	bool CanSeek() override {
 		return internal_filesystem->CanSeek();
 	}

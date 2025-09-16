@@ -1,13 +1,11 @@
 #define DUCKDB_EXTENSION_MAIN
 
-#include "quack_extension.hpp"
 #include "duckdb.hpp"
 #include "duckdb/common/exception.hpp"
 #include "duckdb/common/opener_file_system.hpp"
 #include "duckdb/common/string_util.hpp"
-#include "duckdb/function/scalar_function.hpp"
 #include "duckdb/main/extension_util.hpp"
-#include <duckdb/parser/parsed_data/create_scalar_function_info.hpp>
+#include "observabilityfs_extension.hpp"
 #include "observability_filesystem.hpp"
 
 namespace duckdb {
@@ -40,7 +38,7 @@ static void WrapCacheFileSystem(const DataChunk &args, ExpressionState &state, V
 	result.Reference(Value(SUCCESS));
 }
 
-static void LoadInternal(DatabaseInstance &instance) {	
+static void LoadInternal(DatabaseInstance &instance) {
 	// Register a function to wrap all duckdb-vfs-compatible filesystems. By default only httpfs filesystem instances
 	// are wrapped. Usage for the target filesystem can be used as normal.
 	//
@@ -48,20 +46,20 @@ static void LoadInternal(DatabaseInstance &instance) {
 	// D. LOAD azure;
 	// -- Wrap filesystem with its name.
 	// D. SELECT observefs_wrap_cache_filesystem('AzureBlobStorageFileSystem');
-	ScalarFunction wrap_cache_filesystem_function("observefs_wrap_cache_filesystem",
+	ScalarFunction wrap_cache_filesystem_function("observabilityfs_wrap_cache_filesystem",
 	                                              /*arguments=*/ {LogicalTypeId::VARCHAR},
 	                                              /*return_type=*/LogicalTypeId::BOOLEAN, WrapCacheFileSystem);
 	ExtensionUtil::RegisterFunction(instance, wrap_cache_filesystem_function);
 }
 
-void QuackExtension::Load(DuckDB &db) {
+void ObservabilityfsExtension::Load(DuckDB &db) {
 	LoadInternal(*db.instance);
 }
-std::string QuackExtension::Name() {
-	return "quack";
+std::string ObservabilityfsExtension::Name() {
+	return "observabilityfs";
 }
 
-std::string QuackExtension::Version() const {
+std::string ObservabilityfsExtension::Version() const {
 #ifdef EXT_VERSION_QUACK
 	return EXT_VERSION_QUACK;
 #else
@@ -75,7 +73,7 @@ extern "C" {
 
 DUCKDB_EXTENSION_API void quack_init(duckdb::DatabaseInstance &db) {
 	duckdb::DuckDB db_wrapper(db);
-	db_wrapper.LoadExtension<duckdb::QuackExtension>();
+	db_wrapper.LoadExtension<duckdb::ObservabilityfsExtension>();
 }
 
 DUCKDB_EXTENSION_API const char *quack_version() {
