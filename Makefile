@@ -13,12 +13,12 @@ format-all: format
 	cmake-format -i CMakeLists.txt
 
 test_unit: all
-	find build/release/extension/observabilityfs/ -type f -name "test*" -not -name "*.o" -not -name "*.cpp" -not -name "*.d" -exec {} \;
+	find build/release/extension/observefs/ -type f -name "test*" -not -name "*.o" -not -name "*.cpp" -not -name "*.d" -exec {} \;
 
 test_reldebug_unit: all
-	find build/reldebug/extension/observabilityfs/ -type f -name "test*" -not -name "*.o" -not -name "*.cpp" -not -name "*.d" -exec {} \;
+	find build/reldebug/extension/observefs/ -type f -name "test*" -not -name "*.o" -not -name "*.cpp" -not -name "*.d" -exec {} \;
 
 test_debug_unit: debug
-	find build/debug/extension/observabilityfs/ -type f -name "test*" -not -name "*.o" -not -name "*.cpp" -not -name "*.d" -exec {} \;
+	find build/debug/extension/observefs/ -type f -name "test*" -not -name "*.o" -not -name "*.cpp" -not -name "*.d" -exec {} \;
 
 PHONY: format-all test_unit test_debug_unit

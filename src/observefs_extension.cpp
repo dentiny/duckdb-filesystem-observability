@@ -9,7 +9,7 @@
 #include "filesystem_ref_registry.hpp"
 #include "hffs.hpp"
 #include "httpfs_extension.hpp"
-#include "observabilityfs_extension.hpp"
+#include "observefs_extension.hpp"
 #include "observability_filesystem.hpp"
 #include "s3fs.hpp"
 
@@ -20,8 +20,8 @@ static weak_ptr<DatabaseInstance> duckdb_instance;
 
 // Clear observability data for all filesystems.
 static void ClearObservabilityData(const DataChunk &args, ExpressionState &state, Vector &result) {
-	auto observabilityfs_instances = ObservabilityFsRefRegistry::Get().GetAllObservabilityFs();
-	for (auto *cur_fs : observabilityfs_instances) {
+	auto observefs_instances = ObservabilityFsRefRegistry::Get().GetAllObservabilityFs();
+	for (auto *cur_fs : observefs_instances) {
 		cur_fs->ClearObservabilityData();
 	}
 
@@ -31,8 +31,8 @@ static void ClearObservabilityData(const DataChunk &args, ExpressionState &state
 
 static void GetProfileStats(const DataChunk &args, ExpressionState &state, Vector &result) {
 	string latest_stat;
-	const auto &observabilityfs_instances = ObservabilityFsRefRegistry::Get().GetAllObservabilityFs();
-	for (auto *cur_filesystem : observabilityfs_instances) {
+	const auto &observefs_instances = ObservabilityFsRefRegistry::Get().GetAllObservabilityFs();
+	for (auto *cur_filesystem : observefs_instances) {
 		latest_stat += StringUtil::Format("Current filesystem: %s\n", cur_filesystem->GetName());
 		latest_stat += cur_filesystem->GetHumanReadableStats();
 		latest_stat += "\n";
@@ -97,32 +97,32 @@ static void LoadInternal(DatabaseInstance &instance) {
 	// D. LOAD azure;
 	// -- Wrap filesystem with its name.
 	// D. SELECT observefs_wrap_filesystem('AzureBlobStorageFileSystem');
-	ScalarFunction wrap_filesystem_function("observabilityfs_wrap_filesystem",
+	ScalarFunction wrap_filesystem_function("observefs_wrap_filesystem",
 	                                        /*arguments=*/ {LogicalTypeId::VARCHAR},
 	                                        /*return_type=*/LogicalTypeId::BOOLEAN, WrapFileSystem);
 	ExtensionUtil::RegisterFunction(instance, wrap_filesystem_function);
 
 	// Register observability data cleanup function.
-	ScalarFunction clear_cache_function("observabilityfs_clear", /*arguments=*/ {},
+	ScalarFunction clear_cache_function("observefs_clear", /*arguments=*/ {},
 	                                    /*return_type=*/LogicalType::BOOLEAN, ClearObservabilityData);
 	ExtensionUtil::RegisterFunction(instance, clear_cache_function);
 
 	// Register profile collector metrics.
-	// A commonly-used SQL is `COPY (SELECT observabilityfs_get_profile()) TO '/tmp/output.txt';`.
-	ScalarFunction get_profile_stats_function("observabilityfs_get_profile", /*arguments=*/ {},
+	// A commonly-used SQL is `COPY (SELECT observefs_get_profile()) TO '/tmp/output.txt';`.
+	ScalarFunction get_profile_stats_function("observefs_get_profile", /*arguments=*/ {},
 	                                          /*return_type=*/LogicalType::VARCHAR, GetProfileStats);
 	ExtensionUtil::RegisterFunction(instance, get_profile_stats_function);
 }
 
-void ObservabilityfsExtension::Load(DuckDB &db) {
+void ObservefsExtension::Load(DuckDB &db) {
 	duckdb_instance = db.instance;
 	LoadInternal(*db.instance);
 }
-std::string ObservabilityfsExtension::Name() {
-	return "observabilityfs";
+std::string ObservefsExtension::Name() {
+	return "observefs";
 }
 
-std::string ObservabilityfsExtension::Version() const {
+std::string ObservefsExtension::Version() const {
 #ifdef EXT_VERSION_QUACK
 	return EXT_VERSION_QUACK;
 #else
@@ -136,7 +136,7 @@ extern "C" {
 
 DUCKDB_EXTENSION_API void quack_init(duckdb::DatabaseInstance &db) {
 	duckdb::DuckDB db_wrapper(db);
-	db_wrapper.LoadExtension<duckdb::ObservabilityfsExtension>();
+	db_wrapper.LoadExtension<duckdb::ObservefsExtension>();
 }
 
 DUCKDB_EXTENSION_API const char *quack_version() {

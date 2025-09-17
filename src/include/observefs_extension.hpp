@@ -4,7 +4,7 @@
 
 namespace duckdb {
 
-class ObservabilityfsExtension : public Extension {
+class ObservefsExtension : public Extension {
 public:
 	void Load(DuckDB &db) override;
 	std::string Name() override;

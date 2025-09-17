@@ -27,7 +27,7 @@ public:
 	CacheHttpfsFakeFileSystem();
 	bool CanHandleFile(const string &path) override;
 	std::string GetName() const override {
-		return "observabilityfs_fake_filesystem";
+		return "observefs_fake_filesystem";
 	}
 
 	// Delegate to local filesystem.

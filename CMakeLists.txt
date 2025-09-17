@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.5)
 
 # Set extension name here
-set(TARGET_NAME observabilityfs)
+set(TARGET_NAME observefs)
 
 set(CMAKE_CXX_STANDARD 14)
 
@@ -24,7 +24,7 @@ set(EXTENSION_SOURCES
     src/filesystem_ref_registry.cpp
     src/histogram.cpp
     src/metrics_collector.cpp
-    src/observabilityfs_extension.cpp
+    src/observefs_extension.cpp
     src/observability_filesystem.cpp
     src/operation_latency_histogram.cpp
     src/string_utils.cpp
