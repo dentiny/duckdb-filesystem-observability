@@ -5,6 +5,7 @@
 #include "duckdb/common/opener_file_system.hpp"
 #include "duckdb/common/string_util.hpp"
 #include "duckdb/main/extension_util.hpp"
+#include "fake_filesystem.hpp"
 #include "filesystem_ref_registry.hpp"
 #include "hffs.hpp"
 #include "httpfs_extension.hpp"
@@ -71,6 +72,11 @@ static void LoadInternal(DatabaseInstance &instance) {
 	// Register filesystem instance to instance.
 	auto &fs = instance.GetFileSystem();
 
+	// TODO(hjiang): Register a fake filesystem at extension load for testing purpose. This is not ideal since
+	// additional necessary instance is shipped in the extension. Local filesystem is not viable because it's not
+	// registered in virtual filesystem. A better approach is find another filesystem not in httpfs extension.
+	fs.RegisterSubSystem(make_uniq<CacheHttpfsFakeFileSystem>());
+
 	// By default register all filesystem instances inside of httpfs.
 	auto observability_httpfs_filesystem = make_uniq<ObservabilityFileSystem>(make_uniq<HTTPFileSystem>());
 	ObservabilityFsRefRegistry::Get().Register(observability_httpfs_filesystem.get());
@@ -102,7 +108,7 @@ static void LoadInternal(DatabaseInstance &instance) {
 	ExtensionUtil::RegisterFunction(instance, clear_cache_function);
 
 	// Register profile collector metrics.
-	// A commonly-used SQL is `COPY (SELECT cache_httpfs_get_profile()) TO '/tmp/output.txt';`.
+	// A commonly-used SQL is `COPY (SELECT observabilityfs_get_profile()) TO '/tmp/output.txt';`.
 	ScalarFunction get_profile_stats_function("observabilityfs_get_profile", /*arguments=*/ {},
 	                                          /*return_type=*/LogicalType::VARCHAR, GetProfileStats);
 	ExtensionUtil::RegisterFunction(instance, get_profile_stats_function);

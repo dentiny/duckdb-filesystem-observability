@@ -17,7 +17,7 @@ public:
 	enum class IoOperation {
 		kOpen = 0,
 		kRead = 1,
-		kUnknown,
+		kUnknown = 2,
 	};
 
 	OperationLatencyHistogram();
