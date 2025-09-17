@@ -2,12 +2,12 @@
 # description: test extension wrap feature for filesystem instances other than those in httpfs.
 # group: [sql]
 
-require observabilityfs
+require observefs
 
 statement error
-SELECT observabilityfs_wrap_filesystem('unregistered_filesystem');
+SELECT observefs_wrap_filesystem('unregistered_filesystem');
 ----
 Invalid Input Error: Filesystem unregistered_filesystem hasn't been registered yet!
 
 statement ok
-SELECT observabilityfs_wrap_filesystem('observabilityfs_fake_filesystem');
+SELECT observefs_wrap_filesystem('observefs_fake_filesystem');
