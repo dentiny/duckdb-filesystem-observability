@@ -23,7 +23,11 @@ LatencyGuardWrapper MetricsCollector::RecordOperationStart(IoOperation io_oper, 
 	guard_wrapper.TakeGuard(std::move(overall_latency_guard));
 
 	if (!bucket.empty()) {
-		auto bucket_latency_guard = bucket_latency_histogram_[bucket]->RecordOperationStart(io_oper);
+        auto& cur_bucket_hist = bucket_latency_histogram_[bucket];
+        if (cur_bucket_hist == nullptr) {
+            cur_bucket_hist = make_uniq<OperationLatencyHistogram>();
+        }
+		auto bucket_latency_guard = cur_bucket_hist->RecordOperationStart(io_oper);
 		guard_wrapper.TakeGuard(std::move(bucket_latency_guard));
 	}
 
@@ -45,6 +49,7 @@ std::string MetricsCollector::GetHumanReadableStats() {
 void MetricsCollector::Reset() {
 	std::lock_guard<std::mutex> lck(latency_histogram_mu);
 	overall_latency_histogram_ = make_uniq<OperationLatencyHistogram>();
+    bucket_latency_histogram_.clear();
 }
 
 } // namespace duckdb
