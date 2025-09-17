@@ -1,6 +1,7 @@
 #include "observability_filesystem.hpp"
 
 #include "duckdb/common/string_util.hpp"
+#include "duckdb/main/client_context.hpp"
 
 namespace duckdb {
 
@@ -33,11 +34,11 @@ unique_ptr<FileHandle> ObservabilityFileSystem::OpenFile(const string &path, Fil
 int64_t ObservabilityFileSystem::GetFileSize(FileHandle &handle) {
 	return internal_filesystem->GetFileSize(handle);
 }
-time_t ObservabilityFileSystem::GetLastModifiedTime(FileHandle &handle) {
+timestamp_t ObservabilityFileSystem::GetLastModifiedTime(FileHandle &handle) {
 	return internal_filesystem->GetLastModifiedTime(handle);
 }
-unique_ptr<FileHandle> ObservabilityFileSystem::OpenCompressedFile(unique_ptr<FileHandle> handle, bool write) {
-	return internal_filesystem->OpenCompressedFile(std::move(handle), write);
+unique_ptr<FileHandle> ObservabilityFileSystem::OpenCompressedFile(QueryContext context, unique_ptr<FileHandle> handle, bool write) {
+	return internal_filesystem->OpenCompressedFile(std::move(context), std::move(handle), write);
 }
 void ObservabilityFileSystem::Write(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) {
 	internal_filesystem->Write(handle, buffer, nr_bytes, location);

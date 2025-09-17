@@ -41,8 +41,8 @@ public:
 	// Get file size.
 	int64_t GetFileSize(FileHandle &handle);
 	// Get last modification timestamp.
-	time_t GetLastModifiedTime(FileHandle &handle) override;
-	unique_ptr<FileHandle> OpenCompressedFile(unique_ptr<FileHandle> handle, bool write) override;
+	timestamp_t GetLastModifiedTime(FileHandle &handle) override;
+	unique_ptr<FileHandle> OpenCompressedFile(QueryContext context, unique_ptr<FileHandle> handle, bool write) override;
 	void Write(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) override;
 	int64_t Write(FileHandle &handle, void *buffer, int64_t nr_bytes) override;
 	void Truncate(FileHandle &handle, int64_t new_size) override;
