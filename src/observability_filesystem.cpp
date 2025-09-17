@@ -61,6 +61,7 @@ void ObservabilityFileSystem::RemoveDirectory(const string &directory, optional_
 }
 bool ObservabilityFileSystem::ListFiles(const string &directory,
                                         const std::function<void(const string &, bool)> &callback, FileOpener *opener) {
+	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kList, directory);
 	return internal_filesystem->ListFiles(directory, callback, opener);
 }
 void ObservabilityFileSystem::MoveFile(const string &source, const string &target, optional_ptr<FileOpener> opener) {

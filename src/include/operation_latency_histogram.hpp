@@ -21,7 +21,8 @@ class OperationLatencyHistogram;
 enum class IoOperation {
 	kOpen = 0,
 	kRead = 1,
-	kUnknown = 2,
+	kList = 2,
+	kUnknown = 3,
 };
 
 // A RAII guard to measure latency for IO operations.
@@ -65,6 +66,7 @@ private:
 		oper_names.reserve(kIoOperationCount);
 		oper_names.emplace_back("open");
 		oper_names.emplace_back("read");
+		oper_names.emplace_back("list");
 		return oper_names;
 	}();
 
