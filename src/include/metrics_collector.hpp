@@ -14,10 +14,9 @@ public:
 	MetricsCollector();
 	~MetricsCollector() = default;
 
-	std::string GenerateOperId() const;
-	void RecordOperationStart(OperationLatencyHistogram::IoOperation io_oper, const std::string &oper_id);
-	void RecordOperationEnd(OperationLatencyHistogram::IoOperation io_oper, const std::string &oper_id);
+	LatencyGuard RecordOperationStart(IoOperation io_oper);
 
+	// Represent stats in human-readable format.
 	std::string GetHumanReadableStats();
 
 	// Reset all recorded metrics.
