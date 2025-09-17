@@ -36,11 +36,11 @@ static void GetProfileStats(const DataChunk &args, ExpressionState &state, Vecto
 	result.Reference(Value(std::move(latest_stat)));
 }
 
-static void LoadInternal(ExtensionLoader& loader) {
+static void LoadInternal(ExtensionLoader &loader) {
 	ObservabilityFsRefRegistry::Get().Reset();
 
 	// Register filesystem instance to instance.
-	auto& instance = loader.GetDatabaseInstance();
+	auto &instance = loader.GetDatabaseInstance();
 	auto &fs = instance.GetFileSystem();
 
 	// TODO(hjiang): Register a fake filesystem at extension load for testing purpose. This is not ideal since
@@ -75,7 +75,7 @@ static void LoadInternal(ExtensionLoader& loader) {
 }
 
 void ObservefsExtension::Load(ExtensionLoader &loader) {
-	auto& db = loader.GetDatabaseInstance();
+	auto &db = loader.GetDatabaseInstance();
 
 	// To achieve full compatibility for duckdb-httpfs extension, all related functions/types/... should be supported,
 	// so we load it first.

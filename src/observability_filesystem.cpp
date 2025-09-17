@@ -37,7 +37,8 @@ int64_t ObservabilityFileSystem::GetFileSize(FileHandle &handle) {
 timestamp_t ObservabilityFileSystem::GetLastModifiedTime(FileHandle &handle) {
 	return internal_filesystem->GetLastModifiedTime(handle);
 }
-unique_ptr<FileHandle> ObservabilityFileSystem::OpenCompressedFile(QueryContext context, unique_ptr<FileHandle> handle, bool write) {
+unique_ptr<FileHandle> ObservabilityFileSystem::OpenCompressedFile(QueryContext context, unique_ptr<FileHandle> handle,
+                                                                   bool write) {
 	return internal_filesystem->OpenCompressedFile(std::move(context), std::move(handle), write);
 }
 void ObservabilityFileSystem::Write(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) {
