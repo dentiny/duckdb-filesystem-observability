@@ -13,7 +13,7 @@ void ObservabilityFileSystem::ClearObservabilityData() {
 	metrics_collector.Reset();
 }
 std::string ObservabilityFileSystem::GetHumanReadableStats() {
-    return metrics_collector.GetHumanReadableStats();
+	return metrics_collector.GetHumanReadableStats();
 }
 
 void ObservabilityFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) {
@@ -24,11 +24,11 @@ int64_t ObservabilityFileSystem::Read(FileHandle &handle, void *buffer, int64_t 
 }
 unique_ptr<FileHandle> ObservabilityFileSystem::OpenFile(const string &path, FileOpenFlags flags,
                                                          optional_ptr<FileOpener> opener) {
-    const auto oper_id = metrics_collector.GenerateOperId();
-    metrics_collector.RecordOperationStart(OperationLatencyHistogram::IoOperation::kOpen, oper_id);
+	const auto oper_id = metrics_collector.GenerateOperId();
+	metrics_collector.RecordOperationStart(OperationLatencyHistogram::IoOperation::kOpen, oper_id);
 	auto file_handle = internal_filesystem->OpenFile(path, flags, opener);
-    metrics_collector.RecordOperationEnd(OperationLatencyHistogram::IoOperation::kOpen, oper_id);
-    return file_handle;
+	metrics_collector.RecordOperationEnd(OperationLatencyHistogram::IoOperation::kOpen, oper_id);
+	return file_handle;
 }
 int64_t ObservabilityFileSystem::GetFileSize(FileHandle &handle) {
 	return internal_filesystem->GetFileSize(handle);

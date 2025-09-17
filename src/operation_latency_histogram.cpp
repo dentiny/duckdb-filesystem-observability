@@ -46,7 +46,7 @@ void OperationLatencyHistogram::RecordOperationStart(IoOperation io_oper, const 
 	const auto now = GetSteadyNowMilliSecSinceEpoch();
 
 	std::lock_guard<std::mutex> lck(ongoing_mu);
-    auto &cur_oper_event = operation_events[static_cast<idx_t>(io_oper)];
+	auto &cur_oper_event = operation_events[static_cast<idx_t>(io_oper)];
 	const bool is_new = cur_oper_event
 	                        .emplace(oper_id,
 	                                 OperationStats {
@@ -77,7 +77,7 @@ void OperationLatencyHistogram::RecordOperationEnd(IoOperation io_oper, const st
 
 std::string OperationLatencyHistogram::GetHumanReadableStats() {
 	std::lock_guard<std::mutex> lck(histogram_mu);
-    std::string stats;
+	std::string stats;
 
 	// Record IO operation latency.
 	for (idx_t cur_oper_idx = 0; cur_oper_idx < kIoOperationCount; ++cur_oper_idx) {

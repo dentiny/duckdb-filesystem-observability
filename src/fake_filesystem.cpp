@@ -25,9 +25,6 @@ bool CacheHttpfsFakeFileSystem::CanHandleFile(const string &path) {
 
 unique_ptr<FileHandle> CacheHttpfsFakeFileSystem::OpenFile(const string &path, FileOpenFlags flags,
                                                            optional_ptr<FileOpener> opener) {
-
-    std::cerr << "fake open!" << std::endl;
-
 	auto file_handle = local_filesystem->OpenFile(path, flags, opener);
 	return make_uniq<CacheHttpfsFakeFsHandle>(path, std::move(file_handle), *this);
 }

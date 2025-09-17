@@ -13,12 +13,12 @@ namespace duckdb {
 
 class OperationLatencyHistogram {
 public:
-    // TODO(hjiang): Add more IO operations.
-    enum class IoOperation {
-        kOpen = 0,
-        kRead = 1,
-        kUnknown = 2,
-    };
+	// TODO(hjiang): Add more IO operations.
+	enum class IoOperation {
+		kOpen = 0,
+		kRead = 1,
+		kUnknown = 2,
+	};
 
 	OperationLatencyHistogram();
 	~OperationLatencyHistogram() = default;
@@ -45,9 +45,9 @@ private:
 		// Accounted as time elapsed since unix epoch in milliseconds.
 		int64_t start_timestamp = 0;
 	};
-    
-    // Only records finished operations, which maps from io operation to histogram.
-    std::mutex histogram_mu;
+
+	// Only records finished operations, which maps from io operation to histogram.
+	std::mutex histogram_mu;
 	std::array<unique_ptr<Histogram>, kIoOperationCount> histograms;
 
 	// Ongoing operations.
