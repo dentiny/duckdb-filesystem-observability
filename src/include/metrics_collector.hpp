@@ -24,18 +24,11 @@ public:
 	void Reset();
 
 private:
-<<<<<<< HEAD
-	// TODO(hjiang): Add per-bucket historgram metrics.
-	//
-	// Overall latency histogram.
-	unique_ptr<OperationLatencyHistogram> overall_latency_histogram_;
-=======
     // TODO(hjiang): Add per-bucket historgram metrics.
     //
     // Overall latency histogram.
     std::mutex latency_histogram_mu;
     unique_ptr<OperationLatencyHistogram> overall_latency_histogram_;
->>>>>>> b2fd077 (fix and integrate metrics)
 };
 
 } // namespace duckdb
