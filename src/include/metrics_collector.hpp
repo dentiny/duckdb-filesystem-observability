@@ -13,17 +13,17 @@ class MetricsCollector {
 public:
 	MetricsCollector();
 	~MetricsCollector() = default;
-	
+
 	LatencyGuard RecordOperationStart(IoOperation io_oper);
 
-    // Represent stats in human-readable format.
+	// Represent stats in human-readable format.
 	std::string GetHumanReadableStats();
 
 	// Reset all recorded metrics.
 	void Reset();
 
 private:
-    std::string GenerateOperId() const;
+	std::string GenerateOperId() const;
 
 	// TODO(hjiang): Add per-bucket historgram metrics.
 	//

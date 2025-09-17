@@ -19,21 +19,21 @@ class OperationLatencyHistogram;
 //
 // TODO(hjiang): Add more IO operations.
 enum class IoOperation {
-    kOpen = 0,
-    kRead = 1,
-    kUnknown = 2,
+	kOpen = 0,
+	kRead = 1,
+	kUnknown = 2,
 };
 
 // A RAII guard to measure latency for IO operations.
 class LatencyGuard {
 public:
-    LatencyGuard(OperationLatencyHistogram& latency_collector_p, IoOperation io_operation_p);
-    ~LatencyGuard();
+	LatencyGuard(OperationLatencyHistogram &latency_collector_p, IoOperation io_operation_p);
+	~LatencyGuard();
 
 private:
-    OperationLatencyHistogram& latency_collector;
-    IoOperation io_operation = IoOperation::kUnknown;
-    int64_t start_timestamp = 0;
+	OperationLatencyHistogram &latency_collector;
+	IoOperation io_operation = IoOperation::kUnknown;
+	int64_t start_timestamp = 0;
 };
 
 class OperationLatencyHistogram {
@@ -43,14 +43,14 @@ public:
 
 	LatencyGuard RecordOperationStart(IoOperation io_oper);
 
-    // Represent stats in human-readable format.
+	// Represent stats in human-readable format.
 	std::string GetHumanReadableStats();
 
 private:
-    friend class LatencyGuard;
+	friend class LatencyGuard;
 
-    // Mark the end of the a completed IO operation, disregard it's successful or not.
-    void RecordOperationEnd(IoOperation io_oper, int64_t latency_millisec);
+	// Mark the end of the a completed IO operation, disregard it's successful or not.
+	void RecordOperationEnd(IoOperation io_oper, int64_t latency_millisec);
 
 	static constexpr auto kIoOperationCount = static_cast<size_t>(IoOperation::kUnknown);
 

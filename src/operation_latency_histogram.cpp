@@ -23,16 +23,15 @@ const NoDestructor<string> LATENCY_HISTOGRAM_ITEM {"latency"};
 const NoDestructor<string> LATENCY_HISTOGRAM_UNIT {"millisec"};
 } // namespace
 
-LatencyGuard::LatencyGuard(OperationLatencyHistogram& latency_collector_p, IoOperation io_operation_p)
-: latency_collector(latency_collector_p),
-  io_operation(io_operation_p),
-  start_timestamp(GetSteadyNowMilliSecSinceEpoch()) {
+LatencyGuard::LatencyGuard(OperationLatencyHistogram &latency_collector_p, IoOperation io_operation_p)
+    : latency_collector(latency_collector_p), io_operation(io_operation_p),
+      start_timestamp(GetSteadyNowMilliSecSinceEpoch()) {
 }
 
 LatencyGuard::~LatencyGuard() {
-    const auto now = GetSteadyNowMilliSecSinceEpoch();
-    const auto latency_millisec = now - start_timestamp;
-    latency_collector.RecordOperationEnd(io_operation, latency_millisec);
+	const auto now = GetSteadyNowMilliSecSinceEpoch();
+	const auto latency_millisec = now - start_timestamp;
+	latency_collector.RecordOperationEnd(io_operation, latency_millisec);
 }
 
 OperationLatencyHistogram::OperationLatencyHistogram() {
@@ -48,13 +47,13 @@ OperationLatencyHistogram::OperationLatencyHistogram() {
 }
 
 LatencyGuard OperationLatencyHistogram::RecordOperationStart(IoOperation io_oper) {
-	return LatencyGuard{*this, io_oper};
+	return LatencyGuard {*this, io_oper};
 }
 
 void OperationLatencyHistogram::RecordOperationEnd(IoOperation io_oper, int64_t latency_millisec) {
-    std::lock_guard<std::mutex> lck(histogram_mu);
-    auto &cur_histogram = histograms[static_cast<idx_t>(io_oper)];
-    cur_histogram->Add(latency_millisec);
+	std::lock_guard<std::mutex> lck(histogram_mu);
+	auto &cur_histogram = histograms[static_cast<idx_t>(io_oper)];
+	cur_histogram->Add(latency_millisec);
 }
 
 std::string OperationLatencyHistogram::GetHumanReadableStats() {
