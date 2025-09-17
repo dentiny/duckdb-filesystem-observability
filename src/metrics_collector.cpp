@@ -13,14 +13,9 @@ std::string MetricsCollector::GenerateOperId() const {
 	return UUID::ToString(UUID::GenerateRandomUUID());
 }
 
-void MetricsCollector::RecordOperationStart(OperationLatencyHistogram::IoOperation io_oper,
-                                            const std::string &oper_id) {
+LatencyGuard MetricsCollector::RecordOperationStart(IoOperation io_oper) {
 	std::lock_guard<std::mutex> lck(latency_histogram_mu);
-	overall_latency_histogram_->RecordOperationStart(std::move(io_oper), oper_id);
-}
-void MetricsCollector::RecordOperationEnd(OperationLatencyHistogram::IoOperation io_oper, const std::string &oper_id) {
-	std::lock_guard<std::mutex> lck(latency_histogram_mu);
-	overall_latency_histogram_->RecordOperationEnd(std::move(io_oper), oper_id);
+	overall_latency_histogram_->RecordOperationStart(std::move(io_oper));
 }
 
 std::string MetricsCollector::GetHumanReadableStats() {

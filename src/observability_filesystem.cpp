@@ -24,10 +24,8 @@ int64_t ObservabilityFileSystem::Read(FileHandle &handle, void *buffer, int64_t 
 }
 unique_ptr<FileHandle> ObservabilityFileSystem::OpenFile(const string &path, FileOpenFlags flags,
                                                          optional_ptr<FileOpener> opener) {
-	const auto oper_id = metrics_collector.GenerateOperId();
-	metrics_collector.RecordOperationStart(OperationLatencyHistogram::IoOperation::kOpen, oper_id);
+	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kOpen);
 	auto file_handle = internal_filesystem->OpenFile(path, flags, opener);
-	metrics_collector.RecordOperationEnd(OperationLatencyHistogram::IoOperation::kOpen, oper_id);
 	return file_handle;
 }
 int64_t ObservabilityFileSystem::GetFileSize(FileHandle &handle) {

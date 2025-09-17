@@ -13,17 +13,18 @@ class MetricsCollector {
 public:
 	MetricsCollector();
 	~MetricsCollector() = default;
+	
+	LatencyGuard RecordOperationStart(IoOperation io_oper);
 
-	std::string GenerateOperId() const;
-	void RecordOperationStart(OperationLatencyHistogram::IoOperation io_oper, const std::string &oper_id);
-	void RecordOperationEnd(OperationLatencyHistogram::IoOperation io_oper, const std::string &oper_id);
-
+    // Represent stats in human-readable format.
 	std::string GetHumanReadableStats();
 
 	// Reset all recorded metrics.
 	void Reset();
 
 private:
+    std::string GenerateOperId() const;
+
 	// TODO(hjiang): Add per-bucket historgram metrics.
 	//
 	// Overall latency histogram.

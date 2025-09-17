@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstddef>
+#include <cstdint>
 #include <mutex>
 
 #include "duckdb/common/helper.hpp"
@@ -11,25 +12,46 @@
 
 namespace duckdb {
 
+// Forward declaration.
+class OperationLatencyHistogram;
+
+// IO operation types.
+//
+// TODO(hjiang): Add more IO operations.
+enum class IoOperation {
+    kOpen = 0,
+    kRead = 1,
+    kUnknown = 2,
+};
+
+// A RAII guard to measure latency for IO operations.
+class LatencyGuard {
+public:
+    LatencyGuard(OperationLatencyHistogram& latency_collector_p, IoOperation io_operation_p);
+    ~LatencyGuard();
+
+private:
+    OperationLatencyHistogram& latency_collector;
+    IoOperation io_operation = IoOperation::kUnknown;
+    int64_t start_timestamp = 0;
+};
+
 class OperationLatencyHistogram {
 public:
-	// TODO(hjiang): Add more IO operations.
-	enum class IoOperation {
-		kOpen = 0,
-		kRead = 1,
-		kUnknown = 2,
-	};
-
 	OperationLatencyHistogram();
 	~OperationLatencyHistogram() = default;
 
-	std::string GenerateOperId() const;
-	void RecordOperationStart(IoOperation io_oper, const std::string &oper_id);
-	void RecordOperationEnd(IoOperation io_oper, const std::string &oper_id);
+	LatencyGuard RecordOperationStart(IoOperation io_oper);
 
+    // Represent stats in human-readable format.
 	std::string GetHumanReadableStats();
 
 private:
+    friend class LatencyGuard;
+
+    // Mark the end of the a completed IO operation, disregard it's successful or not.
+    void RecordOperationEnd(IoOperation io_oper, int64_t latency_millisec);
+
 	static constexpr auto kIoOperationCount = static_cast<size_t>(IoOperation::kUnknown);
 
 	// Operation names, indexed by operation enums.
@@ -41,19 +63,9 @@ private:
 		return oper_names;
 	}();
 
-	struct OperationStats {
-		// Accounted as time elapsed since unix epoch in milliseconds.
-		int64_t start_timestamp = 0;
-	};
-
 	// Only records finished operations, which maps from io operation to histogram.
 	std::mutex histogram_mu;
 	std::array<unique_ptr<Histogram>, kIoOperationCount> histograms;
-
-	// Ongoing operations.
-	std::mutex ongoing_mu;
-	using OperationStatsMap = unordered_map<string /*oper_id*/, OperationStats>;
-	std::array<OperationStatsMap, kIoOperationCount> operation_events;
 };
 
 } // namespace duckdb
