@@ -3,6 +3,7 @@
 #include <utility>
 
 #include "string_utils.hpp"
+#include "duckdb/common/string_util.hpp"
 
 namespace duckdb {
 
@@ -31,7 +32,14 @@ LatencyGuardWrapper MetricsCollector::RecordOperationStart(IoOperation io_oper, 
 
 std::string MetricsCollector::GetHumanReadableStats() {
 	std::lock_guard<std::mutex> lck(latency_histogram_mu);
-	return overall_latency_histogram_->GetHumanReadableStats();
+	std::string human_readable_stats;
+	human_readable_stats +=
+	    StringUtil::Format("Overall latency: \n%s\n", overall_latency_histogram_->GetHumanReadableStats());
+	for (const auto &[bucket, histogram] : bucket_latency_histogram_) {
+		human_readable_stats += StringUtil::Format("  Bucket: %s\n", bucket);
+		human_readable_stats += StringUtil::Format("  Latency: %s\n", histogram->GetHumanReadableStats());
+	}
+	return human_readable_stats;
 }
 
 void MetricsCollector::Reset() {

@@ -115,6 +115,15 @@ static void LoadInternal(DatabaseInstance &instance) {
 }
 
 void ObservefsExtension::Load(DuckDB &db) {
+	// To achieve full compatibility for duckdb-httpfs extension, all related functions/types/... should be supported,
+	// so we load it first.
+	httpfs_extension = make_uniq<HttpfsExtension>();
+	// It's possible httpfs is already loaded beforehand, simply capture exception and proceed.
+	try {
+		httpfs_extension->Load(db);
+	} catch (...) {
+	}
+
 	duckdb_instance = db.instance;
 	LoadInternal(*db.instance);
 }
