@@ -19,7 +19,8 @@ include_directories(duckdb-httpfs/extension/httpfs/include)
 include_directories(duckdb/third_party/httplib)
 
 set(EXTENSION_SOURCES
-   src/filesystem_ref_registry.cpp
+  src/fake_filesystem.cpp
+  src/filesystem_ref_registry.cpp
   src/histogram.cpp
   src/metrics_collector.cpp
   src/observabilityfs_extension.cpp
