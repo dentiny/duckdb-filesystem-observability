@@ -16,10 +16,12 @@ std::string ObservabilityFileSystem::GetHumanReadableStats() {
 	return metrics_collector.GetHumanReadableStats();
 }
 
-void ObservabilityFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) {
+void ObservabilityFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) {   
+    const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kRead, handle.GetPath());
 	internal_filesystem->Read(handle, buffer, nr_bytes, location);
 }
-int64_t ObservabilityFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes) {
+int64_t ObservabilityFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes) {    
+    const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kRead, handle.GetPath());
 	return internal_filesystem->Read(handle, buffer, nr_bytes);
 }
 unique_ptr<FileHandle> ObservabilityFileSystem::OpenFile(const string &path, FileOpenFlags flags,
