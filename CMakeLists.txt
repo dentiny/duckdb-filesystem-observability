@@ -5,9 +5,10 @@ set(TARGET_NAME observabilityfs)
 
 set(CMAKE_CXX_STANDARD 14)
 
-# DuckDB's extension distribution supports vcpkg. As such, dependencies can be added in ./vcpkg.json and then
-# used in cmake with find_package. Feel free to remove or replace with other dependencies.
-# Note that it should also be removed from vcpkg.json to prevent needlessly installing it..
+# DuckDB's extension distribution supports vcpkg. As such, dependencies can be
+# added in ./vcpkg.json and then used in cmake with find_package. Feel free to
+# remove or replace with other dependencies. Note that it should also be removed
+# from vcpkg.json to prevent needlessly installing it..
 find_package(OpenSSL REQUIRED)
 
 set(EXTENSION_NAME ${TARGET_NAME}_extension)
@@ -19,24 +20,23 @@ include_directories(duckdb-httpfs/extension/httpfs/include)
 include_directories(duckdb/third_party/httplib)
 
 set(EXTENSION_SOURCES
-  src/fake_filesystem.cpp
-  src/filesystem_ref_registry.cpp
-  src/histogram.cpp
-  src/metrics_collector.cpp
-  src/observabilityfs_extension.cpp
-  src/observability_filesystem.cpp
-  src/operation_latency_histogram.cpp
-  src/time_utils.cpp
-  duckdb-httpfs/extension/httpfs/create_secret_functions.cpp
-  duckdb-httpfs/extension/httpfs/crypto.cpp
-  duckdb-httpfs/extension/httpfs/hash_functions.cpp
-  duckdb-httpfs/extension/httpfs/hffs.cpp
-  duckdb-httpfs/extension/httpfs/httpfs_client.cpp
-  duckdb-httpfs/extension/httpfs/httpfs.cpp
-  duckdb-httpfs/extension/httpfs/httpfs_extension.cpp
-  duckdb-httpfs/extension/httpfs/http_state.cpp
-  duckdb-httpfs/extension/httpfs/s3fs.cpp
-)
+    src/fake_filesystem.cpp
+    src/filesystem_ref_registry.cpp
+    src/histogram.cpp
+    src/metrics_collector.cpp
+    src/observabilityfs_extension.cpp
+    src/observability_filesystem.cpp
+    src/operation_latency_histogram.cpp
+    src/time_utils.cpp
+    duckdb-httpfs/extension/httpfs/create_secret_functions.cpp
+    duckdb-httpfs/extension/httpfs/crypto.cpp
+    duckdb-httpfs/extension/httpfs/hash_functions.cpp
+    duckdb-httpfs/extension/httpfs/hffs.cpp
+    duckdb-httpfs/extension/httpfs/httpfs_client.cpp
+    duckdb-httpfs/extension/httpfs/httpfs.cpp
+    duckdb-httpfs/extension/httpfs/httpfs_extension.cpp
+    duckdb-httpfs/extension/httpfs/http_state.cpp
+    duckdb-httpfs/extension/httpfs/s3fs.cpp)
 
 build_static_extension(${TARGET_NAME} ${EXTENSION_SOURCES})
 build_loadable_extension(${TARGET_NAME} " " ${EXTENSION_SOURCES})
