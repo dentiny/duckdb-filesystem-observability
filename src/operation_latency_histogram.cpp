@@ -19,6 +19,10 @@ constexpr double MIN_GLOB_LATENCY_MILLISEC = 0;
 constexpr double MAX_GLOB_LATENCY_MILLISEC = 1000;
 constexpr int GLOB_LATENCY_NUM_BKT = 100;
 
+constexpr double MIN_LIST_LATENCY_MILLISEC = 0;
+constexpr double MAX_LIST_LATENCY_MILLISEC = 1000;
+constexpr int LIST_LATENCY_NUM_BKT = 100;
+
 const NoDestructor<string> LATENCY_HISTOGRAM_ITEM {"latency"};
 const NoDestructor<string> LATENCY_HISTOGRAM_UNIT {"millisec"};
 } // namespace
@@ -44,6 +48,10 @@ OperationLatencyHistogram::OperationLatencyHistogram() {
 	    make_uniq<Histogram>(MIN_READ_LATENCY_MILLISEC, MAX_READ_LATENCY_MILLISEC, READ_LATENCY_NUM_BKT);
 	histograms[static_cast<idx_t>(IoOperation::kRead)]->SetStatsDistribution(*LATENCY_HISTOGRAM_ITEM,
 	                                                                         *LATENCY_HISTOGRAM_UNIT);
+	histograms[static_cast<idx_t>(IoOperation::kList)] =
+	    make_uniq<Histogram>(MIN_LIST_LATENCY_MILLISEC, MAX_LIST_LATENCY_MILLISEC, LIST_LATENCY_NUM_BKT);
+	histograms[static_cast<idx_t>(IoOperation::kList)]->SetStatsDistribution(*LATENCY_HISTOGRAM_ITEM,
+	                                                                             *LATENCY_HISTOGRAM_UNIT);
 }
 
 LatencyGuard OperationLatencyHistogram::RecordOperationStart(IoOperation io_oper) {
