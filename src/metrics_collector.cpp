@@ -2,15 +2,9 @@
 
 #include <utility>
 
-#include "duckdb/common/types/uuid.hpp"
-
 namespace duckdb {
 
 MetricsCollector::MetricsCollector() : overall_latency_histogram_(make_uniq<OperationLatencyHistogram>()) {
-}
-
-std::string MetricsCollector::GenerateOperId() const {
-	return UUID::ToString(UUID::GenerateRandomUUID());
 }
 
 LatencyGuard MetricsCollector::RecordOperationStart(IoOperation io_oper) {

@@ -23,8 +23,6 @@ public:
 	void Reset();
 
 private:
-	std::string GenerateOperId() const;
-
 	// TODO(hjiang): Add per-bucket historgram metrics.
 	//
 	// Overall latency histogram.
