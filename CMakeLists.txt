@@ -27,6 +27,7 @@ set(EXTENSION_SOURCES
     src/observabilityfs_extension.cpp
     src/observability_filesystem.cpp
     src/operation_latency_histogram.cpp
+    src/string_utils.cpp
     src/time_utils.cpp
     duckdb-httpfs/extension/httpfs/create_secret_functions.cpp
     duckdb-httpfs/extension/httpfs/crypto.cpp
@@ -59,3 +60,6 @@ target_link_libraries(test_histogram ${EXTENSION_NAME})
 
 add_executable(test_no_destructor unit/test_no_destructor.cpp)
 target_link_libraries(test_no_destructor ${EXTENSION_NAME})
+
+add_executable(test_string_utils unit/test_string_utils.cpp)
+target_link_libraries(test_string_utils ${EXTENSION_NAME})
