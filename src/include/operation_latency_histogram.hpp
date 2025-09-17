@@ -30,10 +30,10 @@ public:
 	LatencyGuard(OperationLatencyHistogram &latency_collector_p, IoOperation io_operation_p);
 	~LatencyGuard();
 
-    LatencyGuard(const LatencyGuard&) = delete;
-    LatencyGuard& operator=(const LatencyGuard&) = delete;
-    LatencyGuard(LatencyGuard&&) = default;
-    LatencyGuard& operator=(LatencyGuard&&) = default;
+	LatencyGuard(const LatencyGuard &) = delete;
+	LatencyGuard &operator=(const LatencyGuard &) = delete;
+	LatencyGuard(LatencyGuard &&) = default;
+	LatencyGuard &operator=(LatencyGuard &&) = default;
 
 private:
 	OperationLatencyHistogram &latency_collector;

@@ -13,20 +13,20 @@ namespace duckdb {
 // A RAII wrapper, which manages one or more latency guards.
 class LatencyGuardWrapper {
 public:
-    LatencyGuardWrapper() = default;
-    ~LatencyGuardWrapper() = default;
+	LatencyGuardWrapper() = default;
+	~LatencyGuardWrapper() = default;
 
-    LatencyGuardWrapper(const LatencyGuardWrapper&) = delete;
-    LatencyGuardWrapper& operator=(const LatencyGuardWrapper&) = delete;
+	LatencyGuardWrapper(const LatencyGuardWrapper &) = delete;
+	LatencyGuardWrapper &operator=(const LatencyGuardWrapper &) = delete;
 
-    LatencyGuardWrapper(LatencyGuardWrapper&&) = default;
-    LatencyGuardWrapper& operator=(LatencyGuardWrapper&&) = default;
+	LatencyGuardWrapper(LatencyGuardWrapper &&) = default;
+	LatencyGuardWrapper &operator=(LatencyGuardWrapper &&) = default;
 
-    // Take the ownership of the given [`latency_guard`].
-    void TakeGuard(LatencyGuard latency_guard);
+	// Take the ownership of the given [`latency_guard`].
+	void TakeGuard(LatencyGuard latency_guard);
 
 private:
-    vector<LatencyGuard> latency_guards;
+	vector<LatencyGuard> latency_guards;
 };
 
 class MetricsCollector {
@@ -34,7 +34,7 @@ public:
 	MetricsCollector();
 	~MetricsCollector() = default;
 
-	LatencyGuardWrapper RecordOperationStart(IoOperation io_oper, const string& filepath);
+	LatencyGuardWrapper RecordOperationStart(IoOperation io_oper, const string &filepath);
 
 	// Represent stats in human-readable format.
 	std::string GetHumanReadableStats();
@@ -46,8 +46,8 @@ private:
 	// Overall latency histogram.
 	std::mutex latency_histogram_mu;
 	unique_ptr<OperationLatencyHistogram> overall_latency_histogram_;
-    // Bucket-wise latency histogram.
-    unordered_map<string, unique_ptr<OperationLatencyHistogram>> bucket_latency_histogram_;
+	// Bucket-wise latency histogram.
+	unordered_map<string, unique_ptr<OperationLatencyHistogram>> bucket_latency_histogram_;
 };
 
 } // namespace duckdb
