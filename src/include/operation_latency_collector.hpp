@@ -26,6 +26,22 @@ enum class IoOperation {
 	kUnknown = 3,
 };
 
+// Heuristic estimation of single IO request latency, out of which range are classified as outliers.
+struct LatencyHeuristic {
+	double min_latency_ms;
+	double max_latency_ms;
+	int num_buckets;
+};
+
+inline constexpr LatencyHeuristic kLatencyHeuristics[] = {
+	// kOpen
+	{0, 1000, 100},
+	// kRead
+	{0, 1000, 100},
+	// kList
+	{0, 3000, 100},
+};
+
 // A RAII guard to measure latency for IO operations.
 class LatencyGuard {
 public:
