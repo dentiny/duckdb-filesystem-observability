@@ -28,6 +28,7 @@ set(EXTENSION_SOURCES
     src/observefs_extension.cpp
     src/observability_filesystem.cpp
     src/operation_latency_histogram.cpp
+    src/quantile.cpp
     src/string_utils.cpp
     src/time_utils.cpp
     duckdb-httpfs/extension/httpfs/create_secret_functions.cpp
@@ -65,3 +66,6 @@ target_link_libraries(test_no_destructor ${EXTENSION_NAME})
 
 add_executable(test_string_utils unit/test_string_utils.cpp)
 target_link_libraries(test_string_utils ${EXTENSION_NAME})
+
+add_executable(test_quantile_estimator unit/test_quantile_estimator.cpp)
+target_link_libraries(test_quantile_estimator ${EXTENSION_NAME})
