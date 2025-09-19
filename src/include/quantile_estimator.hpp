@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <vector>
 
 #include "quantile.hpp"
@@ -9,8 +10,9 @@ namespace duckdb {
 class QuantileEstimator {
 public:
     QuantileEstimator() {
-        estimators.reserve(5);
-        for (double q : {0.50, 0.75, 0.90, 0.95, 0.99}) {
+        constexpr std::array<double, 5> QUANTILES {0.50, 0.75, 0.90, 0.95, 0.99};
+        estimators.reserve(QUANTILES.size());
+        for (double q : QUANTILES) {
             estimators.emplace_back(q);
         }
     }

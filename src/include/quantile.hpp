@@ -36,12 +36,14 @@ private:
         int pos;
     };
 
-    double q;
-    int n;
-    std::array<Marker, 5> markers;
-    std::array<double, 5> desired;
-    std::array<double, 5> buffer;
-    std::array<double, 5> q_probs;
+    // P50, P75, P90, P95, P99
+    inline static constexpr size_t QUANTILE_COUNT = 5;
+    double q = 0;
+    int n = 0;
+    std::array<Marker, QUANTILE_COUNT> markers;
+    std::array<double, QUANTILE_COUNT> desired;
+    std::array<double, QUANTILE_COUNT> buffer;
+    std::array<double, QUANTILE_COUNT> q_probs;
 
     void Init();
 
