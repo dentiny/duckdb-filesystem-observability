@@ -25,39 +25,39 @@ vector<int> GetRandomNumbers(int max_val) {
 } // namespace
 
 TEST_CASE("Small scale quantile test", "[quantile test]") {
-    constexpr size_t NUM_VALUE = 50;
-    constexpr double MAX_TOLERABLE_DIFF = 1.0;
+	constexpr size_t NUM_VALUE = 50;
+	constexpr double MAX_TOLERABLE_DIFF = 1.0;
 
-    QuantileEstimator qe;
-    const auto values = GetRandomNumbers(NUM_VALUE);
-    for (int cur_val : values) {
-        qe.Add(cur_val);
-    }
+	QuantileEstimator qe;
+	const auto values = GetRandomNumbers(NUM_VALUE);
+	for (int cur_val : values) {
+		qe.Add(cur_val);
+	}
 
-    const double p50 = qe.p50();
-    REQUIRE(p50 >= 25.5 - MAX_TOLERABLE_DIFF);
-    REQUIRE(p50 <= 25.5 + MAX_TOLERABLE_DIFF);
+	const double p50 = qe.p50();
+	REQUIRE(p50 >= 25.5 - MAX_TOLERABLE_DIFF);
+	REQUIRE(p50 <= 25.5 + MAX_TOLERABLE_DIFF);
 
-    const double p75 = qe.p75();
-    REQUIRE(p75 >= 37.5 - MAX_TOLERABLE_DIFF);
-    REQUIRE(p75 <= 37.5 + MAX_TOLERABLE_DIFF);
+	const double p75 = qe.p75();
+	REQUIRE(p75 >= 37.5 - MAX_TOLERABLE_DIFF);
+	REQUIRE(p75 <= 37.5 + MAX_TOLERABLE_DIFF);
 
-    const double p90 = qe.p90();
-    REQUIRE(p90 >= 45.0 - MAX_TOLERABLE_DIFF);
-    REQUIRE(p90 <= 45.0 + MAX_TOLERABLE_DIFF);
+	const double p90 = qe.p90();
+	REQUIRE(p90 >= 45.0 - MAX_TOLERABLE_DIFF);
+	REQUIRE(p90 <= 45.0 + MAX_TOLERABLE_DIFF);
 
-    const double p95 = qe.p95();
-    REQUIRE(p95 >= 47.5 - MAX_TOLERABLE_DIFF);
-    REQUIRE(p95 <= 47.5 + MAX_TOLERABLE_DIFF);
+	const double p95 = qe.p95();
+	REQUIRE(p95 >= 47.5 - MAX_TOLERABLE_DIFF);
+	REQUIRE(p95 <= 47.5 + MAX_TOLERABLE_DIFF);
 
-    const double p99 = qe.p99();
-    REQUIRE(p99 >= 49.5 - MAX_TOLERABLE_DIFF);
-    REQUIRE(p99 <= 49.5 + MAX_TOLERABLE_DIFF);
+	const double p99 = qe.p99();
+	REQUIRE(p99 >= 49.5 - MAX_TOLERABLE_DIFF);
+	REQUIRE(p99 <= 49.5 + MAX_TOLERABLE_DIFF);
 }
 
 TEST_CASE("Large scale quantile test", "[quantile test]") {
 	constexpr double MAX_TOLERABLE_DIFF = 10;
-    constexpr size_t NUM_VALUE = 1000;
+	constexpr size_t NUM_VALUE = 1000;
 
 	QuantileEstimator qe;
 	const auto values = GetRandomNumbers(NUM_VALUE);
