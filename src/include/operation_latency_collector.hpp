@@ -67,14 +67,9 @@ private:
 	static constexpr auto kIoOperationCount = static_cast<size_t>(IoOperation::kUnknown);
 
 	// Operation names, indexed by operation enums.
-	inline static const vector<const char *> OPER_NAMES = []() {
-		vector<const char *> oper_names;
-		oper_names.reserve(kIoOperationCount);
-		oper_names.emplace_back("open");
-		oper_names.emplace_back("read");
-		oper_names.emplace_back("list");
-		return oper_names;
-	}();
+	inline static const std::array<const char *, kIoOperationCount> OPER_NAMES = {
+		"open", "read", "list"
+	};
 
 	// Only records finished operations, which maps from io operation to histogram.
 	std::mutex latency_collector_mu;
