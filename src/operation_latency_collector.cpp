@@ -22,13 +22,11 @@ LatencyGuard::~LatencyGuard() {
 }
 
 OperationLatencyCollector::OperationLatencyCollector() {
-	for (idx_t i = 0; i < kIoOperationCount; ++i) {
-		if (i < sizeof(kLatencyHeuristics)/sizeof(kLatencyHeuristics[0])) {
-			const auto &heuristic = kLatencyHeuristics[i];
-			latency_collector[i].histogram = make_uniq<Histogram>(heuristic.min_latency_ms, heuristic.max_latency_ms, heuristic.num_buckets);
-			latency_collector[i].histogram->SetStatsDistribution(*LATENCY_HISTOGRAM_ITEM, *LATENCY_HISTOGRAM_UNIT);
-			latency_collector[i].quantile_estimator = make_uniq<QuantileEstimator>(*LATENCY_HISTOGRAM_ITEM, *LATENCY_HISTOGRAM_UNIT);
-		}
+	for (size_t i = 0; i < kLatencyHeuristics.size(); ++i) {
+		const auto &heuristic = kLatencyHeuristics[i];
+		latency_collector[i].histogram = make_uniq<Histogram>(heuristic.min_latency_ms, heuristic.max_latency_ms, heuristic.num_buckets);
+		latency_collector[i].histogram->SetStatsDistribution(*LATENCY_HISTOGRAM_ITEM, *LATENCY_HISTOGRAM_UNIT);
+		latency_collector[i].quantile_estimator = make_uniq<QuantileEstimator>(*LATENCY_HISTOGRAM_ITEM, *LATENCY_HISTOGRAM_UNIT);
 	}
 }
 
