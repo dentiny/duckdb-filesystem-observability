@@ -30,6 +30,7 @@ set(EXTENSION_SOURCES
     src/operation_latency_histogram.cpp
     src/quantile.cpp
     src/quantilelite.cpp
+    src/quantile_estimator.cpp
     src/string_utils.cpp
     src/time_utils.cpp
     duckdb-httpfs/extension/httpfs/create_secret_functions.cpp
