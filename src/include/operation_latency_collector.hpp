@@ -9,11 +9,12 @@
 #include "duckdb/common/unordered_map.hpp"
 #include "duckdb/common/vector.hpp"
 #include "histogram.hpp"
+#include "quantile_estimator.hpp"
 
 namespace duckdb {
 
 // Forward declaration.
-class OperationLatencyHistogram;
+class OperationLatencyCollector;
 
 // IO operation types.
 //
@@ -28,7 +29,7 @@ enum class IoOperation {
 // A RAII guard to measure latency for IO operations.
 class LatencyGuard {
 public:
-	LatencyGuard(OperationLatencyHistogram &latency_collector_p, IoOperation io_operation_p);
+	LatencyGuard(OperationLatencyCollector &latency_collector_p, IoOperation io_operation_p);
 	~LatencyGuard();
 
 	LatencyGuard(const LatencyGuard &) = delete;
@@ -37,15 +38,15 @@ public:
 	LatencyGuard &operator=(LatencyGuard &&) = default;
 
 private:
-	OperationLatencyHistogram &latency_collector;
+	OperationLatencyCollector &latency_collector;
 	IoOperation io_operation = IoOperation::kUnknown;
 	int64_t start_timestamp = 0;
 };
 
-class OperationLatencyHistogram {
+class OperationLatencyCollector {
 public:
-	OperationLatencyHistogram();
-	~OperationLatencyHistogram() = default;
+	OperationLatencyCollector();
+	~OperationLatencyCollector() = default;
 
 	LatencyGuard RecordOperationStart(IoOperation io_oper);
 
@@ -54,6 +55,11 @@ public:
 
 private:
 	friend class LatencyGuard;
+
+	struct LatencyStatsCollector {
+		unique_ptr<Histogram> histogram;
+		unique_ptr<QuantileEstimator> quantile_estimator;
+	};
 
 	// Mark the end of the a completed IO operation, disregard it's successful or not.
 	void RecordOperationEnd(IoOperation io_oper, int64_t latency_millisec);
@@ -71,8 +77,8 @@ private:
 	}();
 
 	// Only records finished operations, which maps from io operation to histogram.
-	std::mutex histogram_mu;
-	std::array<unique_ptr<Histogram>, kIoOperationCount> histograms;
+	std::mutex latency_collector_mu;
+	std::array<LatencyStatsCollector, kIoOperationCount> latency_collector;
 };
 
 } // namespace duckdb

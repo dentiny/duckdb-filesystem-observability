@@ -4,7 +4,7 @@
 
 namespace duckdb {
 
-float QuantileLite::Quantile(float q) {
+float QuantileLite::Quantile(float q) const {
     if (samples.empty()) {
         return 0.0;
     }

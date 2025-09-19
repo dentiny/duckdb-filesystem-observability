@@ -6,7 +6,7 @@
 #include "duckdb/common/unordered_map.hpp"
 #include "duckdb/common/vector.hpp"
 #include "histogram.hpp"
-#include "operation_latency_histogram.hpp"
+#include "operation_latency_collector.hpp"
 
 namespace duckdb {
 
@@ -45,9 +45,9 @@ public:
 private:
 	// Overall latency histogram.
 	std::mutex latency_histogram_mu;
-	unique_ptr<OperationLatencyHistogram> overall_latency_histogram_;
+	unique_ptr<OperationLatencyCollector> overall_latency_histogram_;
 	// Bucket-wise latency histogram.
-	unordered_map<string, unique_ptr<OperationLatencyHistogram>> bucket_latency_histogram_;
+	unordered_map<string, unique_ptr<OperationLatencyCollector>> bucket_latency_histogram_;
 };
 
 } // namespace duckdb

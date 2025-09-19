@@ -10,6 +10,9 @@
 using namespace duckdb; // NOLINT
 
 namespace {
+const std::string METRICS_NAME = "metrics_name";
+const std::string METRICS_UNIT = "metrics_unit";
+
 // Generate random numbers from [1, max_val].
 vector<int> GetRandomNumbers(int max_val) {
 	vector<int> numbers;
@@ -28,7 +31,7 @@ TEST_CASE("Small scale quantile test", "[quantile test]") {
 	constexpr size_t NUM_VALUE = 50;
 	constexpr double MAX_TOLERABLE_DIFF = 1.0;
 
-	QuantileEstimator qe;
+	QuantileEstimator qe {METRICS_NAME, METRICS_UNIT};
 	const auto values = GetRandomNumbers(NUM_VALUE);
 	for (int cur_val : values) {
 		qe.Add(cur_val);
@@ -59,7 +62,7 @@ TEST_CASE("Large scale quantile test", "[quantile test]") {
 	constexpr double MAX_TOLERABLE_DIFF = 10;
 	constexpr size_t NUM_VALUE = 1000;
 
-	QuantileEstimator qe;
+	QuantileEstimator qe {METRICS_NAME, METRICS_UNIT};
 	const auto values = GetRandomNumbers(NUM_VALUE);
 	for (int cur_val : values) {
 		qe.Add(cur_val);
