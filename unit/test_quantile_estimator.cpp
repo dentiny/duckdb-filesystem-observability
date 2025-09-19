@@ -10,25 +10,57 @@
 using namespace duckdb; // NOLINT
 
 namespace {
-vector<int> GetRandomNumbers() {
-	constexpr size_t NUM_VALUE = 1000;
-	vector<int> v;
-	v.reserve(NUM_VALUE);
-	for (int i = 1; i <= NUM_VALUE; ++i) {
-		v.push_back(i);
+// Generate random numbers from [1, max_val].
+vector<int> GetRandomNumbers(int max_val) {
+	vector<int> numbers;
+	numbers.reserve(max_val);
+	for (int val = 1; val <= max_val; ++val) {
+		numbers.push_back(val);
 	}
 	std::random_device rd;
 	std::mt19937 g(rd());
-	std::shuffle(v.begin(), v.end(), g);
-	return v;
+	std::shuffle(numbers.begin(), numbers.end(), g);
+	return numbers;
 }
 } // namespace
 
-TEST_CASE("Quantile test", "[quantile test]") {
-	constexpr double MAX_TOLERABLE_DIFF = 10;
+TEST_CASE("Small scale quantile test", "[quantile test]") {
+	constexpr size_t NUM_VALUE = 50;
+	constexpr double MAX_TOLERABLE_DIFF = 1.0;
 
 	QuantileEstimator qe;
-	const auto values = GetRandomNumbers();
+	const auto values = GetRandomNumbers(NUM_VALUE);
+	for (int cur_val : values) {
+		qe.Add(cur_val);
+	}
+
+	const double p50 = qe.p50();
+	REQUIRE(p50 >= 25.5 - MAX_TOLERABLE_DIFF);
+	REQUIRE(p50 <= 25.5 + MAX_TOLERABLE_DIFF);
+
+	const double p75 = qe.p75();
+	REQUIRE(p75 >= 37.5 - MAX_TOLERABLE_DIFF);
+	REQUIRE(p75 <= 37.5 + MAX_TOLERABLE_DIFF);
+
+	const double p90 = qe.p90();
+	REQUIRE(p90 >= 45.0 - MAX_TOLERABLE_DIFF);
+	REQUIRE(p90 <= 45.0 + MAX_TOLERABLE_DIFF);
+
+	const double p95 = qe.p95();
+	REQUIRE(p95 >= 47.5 - MAX_TOLERABLE_DIFF);
+	REQUIRE(p95 <= 47.5 + MAX_TOLERABLE_DIFF);
+
+	const double p99 = qe.p99();
+	REQUIRE(p99 >= 49.5 - MAX_TOLERABLE_DIFF);
+	REQUIRE(p99 <= 49.5 + MAX_TOLERABLE_DIFF);
+}
+
+TEST_CASE("Large scale quantile test", "[quantile test]") {
+	constexpr double MAX_TOLERABLE_DIFF = 10;
+	constexpr size_t NUM_VALUE = 1000;
+
+	QuantileEstimator qe;
+	const auto values = GetRandomNumbers(NUM_VALUE);
 	for (int cur_val : values) {
 		qe.Add(cur_val);
 	}
