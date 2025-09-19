@@ -9,6 +9,7 @@
 #include "duckdb/common/unordered_map.hpp"
 #include "duckdb/common/vector.hpp"
 #include "histogram.hpp"
+#include "quantile_estimator.hpp"
 
 namespace duckdb {
 
@@ -55,6 +56,11 @@ public:
 private:
 	friend class LatencyGuard;
 
+	struct LatencyStatsCollector {
+		unique_ptr<Histogram> histogram;
+		unique_ptr<QuantileEstimator> quantile_estimator;
+	};
+
 	// Mark the end of the a completed IO operation, disregard it's successful or not.
 	void RecordOperationEnd(IoOperation io_oper, int64_t latency_millisec);
 
@@ -71,8 +77,8 @@ private:
 	}();
 
 	// Only records finished operations, which maps from io operation to histogram.
-	std::mutex histogram_mu;
-	std::array<unique_ptr<Histogram>, kIoOperationCount> histograms;
+	std::mutex latency_collector_mu;
+	std::array<LatencyStatsCollector, kIoOperationCount> latency_collector;
 };
 
 } // namespace duckdb

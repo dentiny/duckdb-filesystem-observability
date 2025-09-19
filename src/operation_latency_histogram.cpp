@@ -39,19 +39,26 @@ LatencyGuard::~LatencyGuard() {
 }
 
 OperationLatencyHistogram::OperationLatencyHistogram() {
-	histograms[static_cast<idx_t>(IoOperation::kOpen)] =
+	latency_collector[static_cast<idx_t>(IoOperation::kOpen)].histogram =
 	    make_uniq<Histogram>(MIN_OPEN_LATENCY_MILLISEC, MAX_OPEN_LATENCY_MILLISEC, OPEN_LATENCY_NUM_BKT);
-	histograms[static_cast<idx_t>(IoOperation::kOpen)]->SetStatsDistribution(*LATENCY_HISTOGRAM_ITEM,
+	latency_collector[static_cast<idx_t>(IoOperation::kOpen)].histogram->SetStatsDistribution(*LATENCY_HISTOGRAM_ITEM,
+	                                                                         *LATENCY_HISTOGRAM_UNIT);
+	latency_collector[static_cast<idx_t>(IoOperation::kOpen)].quantile_estimator = make_uniq<QuantileEstimator>(*LATENCY_HISTOGRAM_ITEM,
 	                                                                         *LATENCY_HISTOGRAM_UNIT);
 
-	histograms[static_cast<idx_t>(IoOperation::kRead)] =
+	latency_collector[static_cast<idx_t>(IoOperation::kRead)].histogram =
 	    make_uniq<Histogram>(MIN_READ_LATENCY_MILLISEC, MAX_READ_LATENCY_MILLISEC, READ_LATENCY_NUM_BKT);
-	histograms[static_cast<idx_t>(IoOperation::kRead)]->SetStatsDistribution(*LATENCY_HISTOGRAM_ITEM,
+	latency_collector[static_cast<idx_t>(IoOperation::kRead)].histogram->SetStatsDistribution(*LATENCY_HISTOGRAM_ITEM,
 	                                                                         *LATENCY_HISTOGRAM_UNIT);
-	histograms[static_cast<idx_t>(IoOperation::kList)] =
+	latency_collector[static_cast<idx_t>(IoOperation::kRead)].quantile_estimator = make_uniq<QuantileEstimator>(*LATENCY_HISTOGRAM_ITEM,
+	                                                                         *LATENCY_HISTOGRAM_UNIT);
+
+	latency_collector[static_cast<idx_t>(IoOperation::kList)].histogram =
 	    make_uniq<Histogram>(MIN_LIST_LATENCY_MILLISEC, MAX_LIST_LATENCY_MILLISEC, LIST_LATENCY_NUM_BKT);
-	histograms[static_cast<idx_t>(IoOperation::kList)]->SetStatsDistribution(*LATENCY_HISTOGRAM_ITEM,
+	latency_collector[static_cast<idx_t>(IoOperation::kList)].histogram->SetStatsDistribution(*LATENCY_HISTOGRAM_ITEM,
 	                                                                             *LATENCY_HISTOGRAM_UNIT);
+    latency_collector[static_cast<idx_t>(IoOperation::kList)].quantile_estimator = make_uniq<QuantileEstimator>(*LATENCY_HISTOGRAM_ITEM,
+	                                                                         *LATENCY_HISTOGRAM_UNIT);
 }
 
 LatencyGuard OperationLatencyHistogram::RecordOperationStart(IoOperation io_oper) {
@@ -59,24 +66,30 @@ LatencyGuard OperationLatencyHistogram::RecordOperationStart(IoOperation io_oper
 }
 
 void OperationLatencyHistogram::RecordOperationEnd(IoOperation io_oper, int64_t latency_millisec) {
-	std::lock_guard<std::mutex> lck(histogram_mu);
-	auto &cur_histogram = histograms[static_cast<idx_t>(io_oper)];
+	std::lock_guard<std::mutex> lck(latency_collector_mu);
+	auto &cur_histogram = latency_collector[static_cast<idx_t>(io_oper)].histogram;
 	cur_histogram->Add(latency_millisec);
+	auto& cur_quantile_estimator = latency_collector[static_cast<idx_t>(io_oper)].quantile_estimator;
+	cur_quantile_estimator->Add(static_cast<float>(latency_millisec));
 }
 
 std::string OperationLatencyHistogram::GetHumanReadableStats() {
-	std::lock_guard<std::mutex> lck(histogram_mu);
+	std::lock_guard<std::mutex> lck(latency_collector_mu);
 	std::string stats;
 
 	// Record IO operation latency.
 	for (idx_t cur_oper_idx = 0; cur_oper_idx < kIoOperationCount; ++cur_oper_idx) {
-		const auto &cur_histogram = histograms[cur_oper_idx];
+		// Check histogram.
+		auto &cur_histogram = latency_collector[static_cast<idx_t>(cur_oper_idx)].histogram;
 		if (cur_histogram->counts() == 0) {
 			continue;
 		}
-		stats = StringUtil::Format("%s\n"
-		                           "%s operation latency is %s",
-		                           stats, OPER_NAMES[cur_oper_idx], cur_histogram->FormatString());
+		stats += StringUtil::Format("\n%s operation histogram is %s",
+		                           OPER_NAMES[cur_oper_idx], cur_histogram->FormatString());
+
+		// Check important quantiles.
+		auto& cur_quantile_estimator = latency_collector[static_cast<idx_t>(cur_oper_idx)].quantile_estimator;
+		stats += StringUtil::Format("\n%s operation quantile is %s", OPER_NAMES[cur_oper_idx], cur_quantile_estimator->FormatString());
 	}
 
 	return stats;

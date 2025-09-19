@@ -1,5 +1,7 @@
 #include "quantile_estimator.hpp"
 
+#include "duckdb/common/string_util.hpp"
+
 namespace duckdb {
 
 void QuantileEstimator::Add(float x) {
@@ -24,35 +26,35 @@ void QuantileEstimator::Add(float x) {
     quantile_lite.Add(x);
 }
 
-float QuantileEstimator::p50() {
+float QuantileEstimator::p50() const {
     std::lock_guard<std::mutex> lck(mu);
     if (estimators.empty()) {
         return quantile_lite.p50();
     }
     return estimators[0].Get(); 
 }
-float QuantileEstimator::p75() {
+float QuantileEstimator::p75() const {
     std::lock_guard<std::mutex> lck(mu);
     if (estimators.empty()) {
         return quantile_lite.p75();
     }
     return estimators[1].Get(); 
 }
-float QuantileEstimator::p90() {
+float QuantileEstimator::p90() const {
     std::lock_guard<std::mutex> lck(mu);
     if (estimators.empty()) {
         return quantile_lite.p90();
     }
     return estimators[2].Get(); 
 }
-float QuantileEstimator::p95() {
+float QuantileEstimator::p95() const {
     std::lock_guard<std::mutex> lck(mu);
     if (estimators.empty()) {
         return quantile_lite.p95();
     }
     return estimators[3].Get(); 
 }
-float QuantileEstimator::p99() {
+float QuantileEstimator::p99() const {
     std::lock_guard<std::mutex> lck(mu);
     if (estimators.empty()) {
         return quantile_lite.p99();
@@ -72,6 +74,16 @@ void QuantileEstimator::InitializeP2QuantileWithLock() {
     for (auto& e : estimators) {
         e.BulkAdd(data_points);
     }
+}
+
+string QuantileEstimator::FormatString() const {
+    string stats;
+    stats += StringUtil::Format("\nP50 %s %f %s", quantile_name, p50(), quantile_unit);
+    stats += StringUtil::Format("\nP75 %s %f %s", quantile_name, p75(), quantile_unit);
+    stats += StringUtil::Format("\nP90 %s %f %s", quantile_name, p90(), quantile_unit);
+    stats += StringUtil::Format("\nP95 %s %f %s", quantile_name, p95(), quantile_unit);
+    stats += StringUtil::Format("\nP99 %s %f %s", quantile_name, p99(), quantile_unit);
+    return stats;
 }
 
 }  // namespace duckdb

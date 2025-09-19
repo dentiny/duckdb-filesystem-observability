@@ -29,26 +29,26 @@ public:
         return samples.size();
     }
 
-    float p50() {
+    float p50() const {
         return Quantile(0.50); 
     }
-    float p75() {
+    float p75() const {
         return Quantile(0.75); 
     }
-    float p90() {
+    float p90() const {
         return Quantile(0.90); 
     }
-    float p95() {
+    float p95() const {
         return Quantile(0.95); 
     }
-    float p99() {
+    float p99() const {
         return Quantile(0.99); 
     }
 
 private:
-    float Quantile(float q);
+    float Quantile(float q) const;
 
-    vector<float> samples;
+    mutable vector<float> samples;
 };
 
 }  // namespace duckdb

@@ -60,32 +60,6 @@ double Histogram::mean() const {
 	return sum_ / total_counts_;
 }
 
-double Histogram::Quantile(double q) const {
-	D_ASSERT(q >= 0.0 && q <= 1.0);
-	if (total_counts_ == 0) {
-		return 0.0;
-	}
-
-	size_t target_rank = static_cast<size_t>(std::ceil(q * total_counts_));
-	size_t cumulative = 0;
-	const double interval = (max_val_ - min_val_) / num_bkt_;
-
-	for (size_t idx = 0; idx < hist_.size(); ++idx) {
-		size_t bucket_count = hist_[idx];
-		if (bucket_count == 0) {
-			continue;
-		}
-		if (cumulative + bucket_count >= target_rank) {
-			const double cur_min_val = min_val_ + interval * idx;
-			const double fraction_in_bucket = (target_rank - cumulative) * 1.0 / bucket_count;
-			return cur_min_val + fraction_in_bucket * interval;
-		}
-		cumulative += bucket_count;
-	}
-
-	return max_encountered_;
-}
-
 std::string Histogram::FormatString() const {
 	std::string res;
 
@@ -102,14 +76,6 @@ std::string Histogram::FormatString() const {
 	res += StringUtil::Format("Max %s = %lf %s\n", distribution_name_, max(), distribution_unit_);
 	res += StringUtil::Format("Min %s = %lf %s\n", distribution_name_, min(), distribution_unit_);
 	res += StringUtil::Format("Mean %s = %lf %s\n", distribution_name_, mean(), distribution_unit_);
-
-	// Format quantiles.
-	res += "Rough estimation for quantiles:\n";
-	res += StringUtil::Format("p50 = %lf %s\n", p50(), distribution_unit_);
-	res += StringUtil::Format("p75 = %lf %s\n", p75(), distribution_unit_);
-	res += StringUtil::Format("p90 = %lf %s\n", p90(), distribution_unit_);
-	res += StringUtil::Format("p95 = %lf %s\n", p95(), distribution_unit_);
-	res += StringUtil::Format("p99 = %lf %s\n", p99(), distribution_unit_);
 
 	// Format stats distribution.
 	const double interval = (max_val_ - min_val_) / num_bkt_;
