@@ -6,23 +6,6 @@
 namespace duckdb {
 
 namespace {
-// Heuristic estimation of single IO request latency, out of which range are classified as outliers.
-constexpr double MIN_READ_LATENCY_MILLISEC = 0;
-constexpr double MAX_READ_LATENCY_MILLISEC = 1000;
-constexpr int READ_LATENCY_NUM_BKT = 100;
-
-constexpr double MIN_OPEN_LATENCY_MILLISEC = 0;
-constexpr double MAX_OPEN_LATENCY_MILLISEC = 1000;
-constexpr int OPEN_LATENCY_NUM_BKT = 100;
-
-constexpr double MIN_GLOB_LATENCY_MILLISEC = 0;
-constexpr double MAX_GLOB_LATENCY_MILLISEC = 1000;
-constexpr int GLOB_LATENCY_NUM_BKT = 100;
-
-constexpr double MIN_LIST_LATENCY_MILLISEC = 0;
-constexpr double MAX_LIST_LATENCY_MILLISEC = 3000;
-constexpr int LIST_LATENCY_NUM_BKT = 100;
-
 const NoDestructor<string> LATENCY_HISTOGRAM_ITEM {"latency"};
 const NoDestructor<string> LATENCY_HISTOGRAM_UNIT {"millisec"};
 } // namespace
@@ -39,26 +22,12 @@ LatencyGuard::~LatencyGuard() {
 }
 
 OperationLatencyCollector::OperationLatencyCollector() {
-	latency_collector[static_cast<idx_t>(IoOperation::kOpen)].histogram =
-	    make_uniq<Histogram>(MIN_OPEN_LATENCY_MILLISEC, MAX_OPEN_LATENCY_MILLISEC, OPEN_LATENCY_NUM_BKT);
-	latency_collector[static_cast<idx_t>(IoOperation::kOpen)].histogram->SetStatsDistribution(*LATENCY_HISTOGRAM_ITEM,
-	                                                                         *LATENCY_HISTOGRAM_UNIT);
-	latency_collector[static_cast<idx_t>(IoOperation::kOpen)].quantile_estimator = make_uniq<QuantileEstimator>(*LATENCY_HISTOGRAM_ITEM,
-	                                                                         *LATENCY_HISTOGRAM_UNIT);
-
-	latency_collector[static_cast<idx_t>(IoOperation::kRead)].histogram =
-	    make_uniq<Histogram>(MIN_READ_LATENCY_MILLISEC, MAX_READ_LATENCY_MILLISEC, READ_LATENCY_NUM_BKT);
-	latency_collector[static_cast<idx_t>(IoOperation::kRead)].histogram->SetStatsDistribution(*LATENCY_HISTOGRAM_ITEM,
-	                                                                         *LATENCY_HISTOGRAM_UNIT);
-	latency_collector[static_cast<idx_t>(IoOperation::kRead)].quantile_estimator = make_uniq<QuantileEstimator>(*LATENCY_HISTOGRAM_ITEM,
-	                                                                         *LATENCY_HISTOGRAM_UNIT);
-
-	latency_collector[static_cast<idx_t>(IoOperation::kList)].histogram =
-	    make_uniq<Histogram>(MIN_LIST_LATENCY_MILLISEC, MAX_LIST_LATENCY_MILLISEC, LIST_LATENCY_NUM_BKT);
-	latency_collector[static_cast<idx_t>(IoOperation::kList)].histogram->SetStatsDistribution(*LATENCY_HISTOGRAM_ITEM,
-	                                                                             *LATENCY_HISTOGRAM_UNIT);
-    latency_collector[static_cast<idx_t>(IoOperation::kList)].quantile_estimator = make_uniq<QuantileEstimator>(*LATENCY_HISTOGRAM_ITEM,
-	                                                                         *LATENCY_HISTOGRAM_UNIT);
+	for (size_t i = 0; i < kLatencyHeuristics.size(); ++i) {
+		const auto &heuristic = kLatencyHeuristics[i];
+		latency_collector[i].histogram = make_uniq<Histogram>(heuristic.min_latency_ms, heuristic.max_latency_ms, heuristic.num_buckets);
+		latency_collector[i].histogram->SetStatsDistribution(*LATENCY_HISTOGRAM_ITEM, *LATENCY_HISTOGRAM_UNIT);
+		latency_collector[i].quantile_estimator = make_uniq<QuantileEstimator>(*LATENCY_HISTOGRAM_ITEM, *LATENCY_HISTOGRAM_UNIT);
+	}
 }
 
 LatencyGuard OperationLatencyCollector::RecordOperationStart(IoOperation io_oper) {
