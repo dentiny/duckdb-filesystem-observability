@@ -14,7 +14,7 @@
 namespace duckdb {
 
 // Forward declaration.
-class OperationLatencyHistogram;
+class OperationLatencyCollector;
 
 // IO operation types.
 //
@@ -29,7 +29,7 @@ enum class IoOperation {
 // A RAII guard to measure latency for IO operations.
 class LatencyGuard {
 public:
-	LatencyGuard(OperationLatencyHistogram &latency_collector_p, IoOperation io_operation_p);
+	LatencyGuard(OperationLatencyCollector &latency_collector_p, IoOperation io_operation_p);
 	~LatencyGuard();
 
 	LatencyGuard(const LatencyGuard &) = delete;
@@ -38,15 +38,15 @@ public:
 	LatencyGuard &operator=(LatencyGuard &&) = default;
 
 private:
-	OperationLatencyHistogram &latency_collector;
+	OperationLatencyCollector &latency_collector;
 	IoOperation io_operation = IoOperation::kUnknown;
 	int64_t start_timestamp = 0;
 };
 
-class OperationLatencyHistogram {
+class OperationLatencyCollector {
 public:
-	OperationLatencyHistogram();
-	~OperationLatencyHistogram() = default;
+	OperationLatencyCollector();
+	~OperationLatencyCollector() = default;
 
 	LatencyGuard RecordOperationStart(IoOperation io_oper);
 

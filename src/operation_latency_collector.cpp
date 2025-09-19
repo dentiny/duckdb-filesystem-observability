@@ -1,4 +1,4 @@
-#include "operation_latency_histogram.hpp"
+#include "operation_latency_collector.hpp"
 
 #include "no_destructor.hpp"
 #include "time_utils.hpp"
@@ -27,7 +27,7 @@ const NoDestructor<string> LATENCY_HISTOGRAM_ITEM {"latency"};
 const NoDestructor<string> LATENCY_HISTOGRAM_UNIT {"millisec"};
 } // namespace
 
-LatencyGuard::LatencyGuard(OperationLatencyHistogram &latency_collector_p, IoOperation io_operation_p)
+LatencyGuard::LatencyGuard(OperationLatencyCollector &latency_collector_p, IoOperation io_operation_p)
     : latency_collector(latency_collector_p), io_operation(io_operation_p),
       start_timestamp(GetSteadyNowMilliSecSinceEpoch()) {
 }
@@ -38,7 +38,7 @@ LatencyGuard::~LatencyGuard() {
 	latency_collector.RecordOperationEnd(io_operation, latency_millisec);
 }
 
-OperationLatencyHistogram::OperationLatencyHistogram() {
+OperationLatencyCollector::OperationLatencyCollector() {
 	latency_collector[static_cast<idx_t>(IoOperation::kOpen)].histogram =
 	    make_uniq<Histogram>(MIN_OPEN_LATENCY_MILLISEC, MAX_OPEN_LATENCY_MILLISEC, OPEN_LATENCY_NUM_BKT);
 	latency_collector[static_cast<idx_t>(IoOperation::kOpen)].histogram->SetStatsDistribution(*LATENCY_HISTOGRAM_ITEM,
@@ -61,11 +61,11 @@ OperationLatencyHistogram::OperationLatencyHistogram() {
 	                                                                         *LATENCY_HISTOGRAM_UNIT);
 }
 
-LatencyGuard OperationLatencyHistogram::RecordOperationStart(IoOperation io_oper) {
+LatencyGuard OperationLatencyCollector::RecordOperationStart(IoOperation io_oper) {
 	return LatencyGuard {*this, io_oper};
 }
 
-void OperationLatencyHistogram::RecordOperationEnd(IoOperation io_oper, int64_t latency_millisec) {
+void OperationLatencyCollector::RecordOperationEnd(IoOperation io_oper, int64_t latency_millisec) {
 	std::lock_guard<std::mutex> lck(latency_collector_mu);
 	auto &cur_histogram = latency_collector[static_cast<idx_t>(io_oper)].histogram;
 	cur_histogram->Add(latency_millisec);
@@ -73,7 +73,7 @@ void OperationLatencyHistogram::RecordOperationEnd(IoOperation io_oper, int64_t 
 	cur_quantile_estimator->Add(static_cast<float>(latency_millisec));
 }
 
-std::string OperationLatencyHistogram::GetHumanReadableStats() {
+std::string OperationLatencyCollector::GetHumanReadableStats() {
 	std::lock_guard<std::mutex> lck(latency_collector_mu);
 	std::string stats;
 

@@ -11,7 +11,7 @@ void LatencyGuardWrapper::TakeGuard(LatencyGuard latency_guard) {
 	latency_guards.emplace_back(std::move(latency_guard));
 }
 
-MetricsCollector::MetricsCollector() : overall_latency_histogram_(make_uniq<OperationLatencyHistogram>()) {
+MetricsCollector::MetricsCollector() : overall_latency_histogram_(make_uniq<OperationLatencyCollector>()) {
 }
 
 LatencyGuardWrapper MetricsCollector::RecordOperationStart(IoOperation io_oper, const string &filepath) {
@@ -25,7 +25,7 @@ LatencyGuardWrapper MetricsCollector::RecordOperationStart(IoOperation io_oper, 
 	if (!bucket.empty()) {
         auto& cur_bucket_hist = bucket_latency_histogram_[bucket];
         if (cur_bucket_hist == nullptr) {
-            cur_bucket_hist = make_uniq<OperationLatencyHistogram>();
+            cur_bucket_hist = make_uniq<OperationLatencyCollector>();
         }
 		auto bucket_latency_guard = cur_bucket_hist->RecordOperationStart(io_oper);
 		guard_wrapper.TakeGuard(std::move(bucket_latency_guard));
@@ -48,7 +48,7 @@ std::string MetricsCollector::GetHumanReadableStats() {
 
 void MetricsCollector::Reset() {
 	std::lock_guard<std::mutex> lck(latency_histogram_mu);
-	overall_latency_histogram_ = make_uniq<OperationLatencyHistogram>();
+	overall_latency_histogram_ = make_uniq<OperationLatencyCollector>();
     bucket_latency_histogram_.clear();
 }
 
