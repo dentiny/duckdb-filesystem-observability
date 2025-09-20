@@ -7,6 +7,29 @@ ObserveFS is a powerful DuckDB extension that provides comprehensive **filesyste
 
 Whether you're optimizing data pipelines, debugging performance issues, or understanding access patterns, ObserveFS gives you the visibility you need.
 
+## Usage
+
+```sql
+-- Install and load the ObserveFS extension
+FORCE INSTALL observefs;
+LOAD observefs;
+
+-- Query remote data (automatically monitored)
+SELECT count(*) FROM 'https://huggingface.co/datasets/open-r1/OpenR1-Math-220k/resolve/main/data/train-00003-of-00010.parquet';
+
+-- View detailed performance metrics
+SELECT observefs_get_profile();
+
+-- Clear metrics for fresh analysis
+SELECT observefs_clear();
+```
+
+The output includes comprehensive metrics:
+- Operation-specific latency histograms (READ, OPEN, LIST)
+- Quantile analysis (P50, P75, P90, P95, P99)
+- Per-bucket performance breakdown
+- Min/Max/Mean latency statistics
+
 ## Getting started
 Clone this repository using:
 ```sh
@@ -63,20 +86,7 @@ CMAKE_BUILD_PARALLEL_LEVEL=$(nproc) make debug
 ```
 
 ## Running the extension
-To run the extension code, simply start the shell with `./build/release/duckdb`. This shell will have the ObserveFS extension pre-loaded.
-
-Now we can use the filesystem observability features from the extension directly in DuckDB:
-```sql
--- Run queries on any filesystem (automatically monitored)
-SELECT * FROM 'https://example.com/data.parquet';
-SELECT * FROM 's3://my-bucket/dataset.csv';
-
--- View performance metrics
-SELECT observefs_get_profile();
-
--- Clear metrics for a fresh start
-SELECT observefs_clear();
-```
+To run the extension code from a development build, start the shell with `./build/release/duckdb`. This shell will have the ObserveFS extension pre-loaded and ready to use.
 
 ## Running the tests
 
