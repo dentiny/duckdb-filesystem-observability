@@ -1,56 +1,73 @@
-# ObserveFS - Filesystem Observability Extension for DuckDB
+# ObserveFS - DuckDB Filesystem Observability Extension
 
-[![DuckDB Extension](https://img.shields.io/badge/DuckDB-Extension-blue.svg)](https://duckdb.org/community_extensions/extensions/observefs.html)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## 🚀 What is ObserveFS?
+## What is ObserveFS?
 
-ObserveFS is a powerful DuckDB extension that provides comprehensive **filesystem observability** for your data operations. It transparently wraps any filesystem (local, HTTP, S3, Hugging Face) with monitoring capabilities, giving you detailed insights into I/O performance, latency patterns, and usage metrics.
+ObserveFS is a powerful DuckDB extension that provides comprehensive **filesystem observability** for your data operations. It transparently wraps httpfs (HTTP, S3, Hugging Face) with monitoring capabilities, giving you detailed insights into I/O performance, latency patterns, and usage metrics.
 
 Whether you're optimizing data pipelines, debugging performance issues, or understanding access patterns, ObserveFS gives you the visibility you need.
 
-## ✨ Key Features
+## Getting started
+Clone this repository using:
+```sh
+git clone --recurse-submodules https://github.com/dentiny/duckdb-filesystem-observability.git
+```
+Note that `--recurse-submodules` will ensure DuckDB is pulled which is required to build the extension.
 
-### 📊 Comprehensive I/O Monitoring
-- **Operation Tracking**: Monitor `READ`, `OPEN`, and `LIST` operations across all supported filesystems
-- **Latency Measurement**: Precise millisecond-level latency tracking using RAII guards
-- **Bucket-wise Analysis**: Separate metrics for different storage buckets/paths
+## Building
 
-### 📈 Advanced Statistical Analysis
-- **Histogram Distribution**: Detailed latency distribution analysis with configurable buckets
-- **Quantile Estimation**: P50, P75, P90, P95, and P99 latency percentiles
-- **Adaptive Algorithms**: Switches between in-memory and P² quantile estimation for large datasets
-- **Outlier Detection**: Automatic identification and tracking of performance outliers
+### Prerequisites
 
-### 🌐 Multi-Filesystem Support
-- **HTTP/HTTPS**: Monitor web-based data access
-- **Amazon S3**: Track cloud storage performance
-- **Hugging Face**: Observe model and dataset access patterns
-- **Local Files**: Analyze local filesystem operations
-- **Extensible**: Easy to add support for new filesystem types
+The easiest way to build and develop ObserveFS is using the provided dev container, which includes all necessary dependencies and tools.
 
-### 🔧 Developer-Friendly API
-- **Zero Configuration**: Works out-of-the-box with existing DuckDB queries
-- **Non-Intrusive**: Transparent wrapper that doesn't change your code
-- **Thread-Safe**: Concurrent query support with mutex-protected metrics
-- **SQL Integration**: Query metrics directly using SQL functions
+### Build steps
 
-## 🚀 Quick Start
+Once you're in the dev container (see Development Environment section below), build the extension:
 
-### Installation
+```bash
+# Build the extension (release version)
+make
 
-```sql
--- Install from DuckDB Community Extensions
-INSTALL observefs FROM community;
-LOAD observefs;
+# Faster parallel build using all available CPU cores
+CMAKE_BUILD_PARALLEL_LEVEL=$(nproc) make
+
+# Or build with faster ninja generator
+GEN=ninja make
+
+# Combine both for maximum speed
+CMAKE_BUILD_PARALLEL_LEVEL=$(nproc) GEN=ninja make
 ```
 
-### Basic Usage
+The main binaries that will be built are:
+```bash
+./build/release/duckdb
+./build/release/test/unittest
+./build/release/extension/observefs/observefs.duckdb_extension
+```
 
-Once loaded, ObserveFS automatically monitors all filesystem operations. Run your normal DuckDB queries and collect metrics:
+- `duckdb` is the binary for the duckdb shell with the ObserveFS extension automatically loaded
+- `unittest` is the test runner for SQL-based tests
+- `observefs.duckdb_extension` is the loadable extension binary
 
+### Build Configurations
+
+Different build configurations are available:
+```bash
+make release    # Release build (default)
+make debug      # Debug build
+make reldebug   # Release with debug info
+
+# For faster builds, use parallel compilation
+CMAKE_BUILD_PARALLEL_LEVEL=$(nproc) make release
+CMAKE_BUILD_PARALLEL_LEVEL=$(nproc) make debug
+```
+
+## Running the extension
+To run the extension code, simply start the shell with `./build/release/duckdb`. This shell will have the ObserveFS extension pre-loaded.
+
+Now we can use the filesystem observability features from the extension directly in DuckDB:
 ```sql
--- Your normal data operations (automatically monitored)
+-- Run queries on any filesystem (automatically monitored)
 SELECT * FROM 'https://example.com/data.parquet';
 SELECT * FROM 's3://my-bucket/dataset.csv';
 
@@ -61,156 +78,138 @@ SELECT observefs_get_profile();
 SELECT observefs_clear();
 ```
 
-## 📊 Understanding the Metrics
+## Running the tests
 
-### Sample Output
+ObserveFS includes both SQL-based integration tests and C++ unit tests.
 
-```
-Current filesystem: observability-HTTPFileSystem
-Overall latency:
-
-open operation histogram is Max latency = 245.000000 millisec
-Min latency = 89.000000 millisec
-Mean latency = 156.333333 millisec
-Distribution latency [80.000000, 90.000000) millisec: 11.11 %
-Distribution latency [240.000000, 250.000000) millisec: 22.22 %
-
-open operation quantile is
-P50 latency 134.000000 millisec
-P75 latency 189.500000 millisec
-P90 latency 234.100000 millisec
-P95 latency 239.550000 millisec
-P99 latency 244.110000 millisec
-
-read operation histogram is Max latency = 1205.000000 millisec
-Min latency = 23.000000 millisec
-Mean latency = 299.750000 millisec
-
-  Bucket: my-s3-bucket
-  Latency:
-read operation histogram is Max latency = 892.000000 millisec
-Min latency = 145.000000 millisec
-Mean latency = 518.500000 millisec
-```
-
-### Metrics Breakdown
-
-- **Overall Latency**: Aggregated metrics across all operations and filesystems
-- **Operation-Specific Stats**: Separate tracking for different I/O types
-- **Bucket Analysis**: Per-bucket/path performance breakdown
-- **Distribution Analysis**: Histogram showing latency ranges and frequencies
-- **Quantile Analysis**: Percentile-based performance insights
-
-## 🎯 Use Cases
-
-### 🔍 Performance Debugging
-```sql
--- Monitor a slow query
-SELECT * FROM 's3://large-dataset/data.parquet' WHERE date > '2024-01-01';
-
--- Check if network or storage is the bottleneck
-SELECT observefs_get_profile();
-```
-
-### 📊 Data Pipeline Optimization
-```sql
--- Compare performance across different data sources
-SELECT * FROM 'https://api.example.com/data.json';
-SELECT * FROM 's3://cache-bucket/data.parquet';
-
--- Analyze which source is faster
-SELECT observefs_get_profile();
-```
-
-### 🌐 Multi-Cloud Analysis
-```sql
--- Test data access across regions/providers
-SELECT * FROM 's3://us-west-bucket/dataset.csv';
-SELECT * FROM 's3://eu-west-bucket/dataset.csv';
-
--- Compare cross-region latencies
-SELECT observefs_get_profile();
-```
-
-### 🤖 ML Workflow Monitoring
-```sql
--- Monitor Hugging Face model loading
-SELECT * FROM 'hf://datasets/squad/train.parquet';
-
--- Track data loading performance
-SELECT observefs_get_profile();
-```
-
-## 🔧 Advanced Configuration
-
-### Latency Heuristics
-
-ObserveFS uses intelligent defaults for different operation types:
-
-- **OPEN operations**: 0-1000ms range, 100 buckets
-- **READ operations**: 0-1000ms range, 100 buckets
-- **LIST operations**: 0-3000ms range, 100 buckets
-
-Values outside these ranges are tracked as outliers.
-
-### Quantile Estimation
-
-The extension automatically switches between algorithms based on data volume:
-- **Small datasets**: In-memory exact quantiles
-- **Large datasets**: P² algorithm for memory-efficient estimation
-
-## 🛠️ Building from Source
-
+### SQL Integration Tests
+SQL-based tests are located in the `test/sql/` directory and can be run with:
 ```bash
-# Clone with submodules
-git clone --recurse-submodules https://github.com/your-repo/duckdb-filesystem-observability.git
-
-# Install dependencies (requires VCPKG)
-export VCPKG_TOOLCHAIN_PATH=/path/to/vcpkg/scripts/buildsystems/vcpkg.cmake
-
-# Build
-make
-
-# Run tests
 make test
 ```
 
-## 🤝 Contributing
+### Unit Tests
+C++ unit tests are available for core components:
+```bash
+# Run all unit tests
+make test_unit
 
-We welcome contributions! Areas for improvement:
+# Run specific unit test binaries
+./build/release/extension/observefs/test_histogram
+./build/release/extension/observefs/test_quantile_estimator
+./build/release/extension/observefs/test_string_utils
+./build/release/extension/observefs/test_no_destructor
+```
 
-- **New Filesystem Support**: Add observability for additional storage systems
-- **Metric Types**: Extend beyond latency (throughput, error rates, etc.)
-- **Visualization**: Integration with monitoring dashboards
-- **Performance**: Optimize overhead for high-throughput scenarios
+Note: All commands should be run inside the dev container environment.
 
-## 📚 Technical Architecture
+## Architecture Overview
 
-ObserveFS uses a **wrapper pattern** that:
+### Core Components
 
-1. **Intercepts** all filesystem operations via DuckDB's FileSystem interface
-2. **Measures** operation latency using RAII guards and steady clocks
-3. **Aggregates** metrics using thread-safe collectors and histograms
-4. **Provides** SQL functions for metric retrieval and management
+1. **ObservabilityFileSystem** (`src/observability_filesystem.cpp`)
+   - Main wrapper filesystem that intercepts all I/O operations
+   - Delegates actual operations to an internal filesystem while collecting metrics
+   - Implements the DuckDB FileSystem interface
 
-The design ensures minimal performance overhead while providing comprehensive observability.
+2. **MetricsCollector** (`src/metrics_collector.cpp`)
+   - Centralized metrics collection and aggregation
+   - Manages overall and per-bucket latency histograms
+   - Thread-safe operations using mutexes
 
-## 🔗 Related Projects
+3. **OperationLatencyCollector** (`src/operation_latency_collector.cpp`)
+   - Tracks latency statistics for different I/O operations (READ, WRITE, OPEN, etc.)
+   - Uses histogram-based latency tracking with quantile estimation
 
-- [DuckDB](https://duckdb.org/) - The analytical database engine
-- [DuckDB Community Extensions](https://duckdb.org/community_extensions/) - Extension ecosystem
-- [DuckDB HTTPFS](https://duckdb.org/docs/extensions/httpfs) - HTTP/S3 filesystem support
+4. **ObservefsExtension** (`src/observefs_extension.cpp`)
+   - Main extension entry point
+   - Loads and integrates with the httpfs extension
+   - Registers the observability filesystem
 
-## 📄 License
+### Key Data Structures
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+- **Histogram** (`src/histogram.cpp`) - General-purpose histogram implementation
+- **QuantileEstimator** (`src/quantile_estimator.cpp`) - Efficient quantile computation
+- **QuantileLite** (`src/quantilelite.cpp`) - Lightweight quantile estimation
+- **FileSystemRefRegistry** (`src/filesystem_ref_registry.cpp`) - Manages filesystem references
 
----
+### Extension Integration
 
-**Ready to gain visibility into your data access patterns?** Install ObserveFS today and start optimizing your DuckDB workflows!
+The extension extends DuckDB's httpfs functionality by wrapping HTTP filesystems with observability. It maintains compatibility with existing httpfs features while adding comprehensive I/O monitoring.
 
-```sql
+## Distribution
+
+ObserveFS can be distributed through the [DuckDB community extensions repository](https://github.com/duckdb/community-extensions). Once available, it can be installed with:
+
+```SQL
 INSTALL observefs FROM community;
 LOAD observefs;
--- Your data operations are now being monitored! 🎉
 ```
+
+For development builds, the extension can be loaded directly:
+```SQL
+LOAD '/path/to/observefs.duckdb_extension';
+```
+
+## Development Environment Setup
+
+### Code Formatting
+
+Format all C++ code and CMake files:
+```bash
+make format-all
+```
+
+### Development Services
+
+The dev container includes additional services for testing:
+- **MinIO**: S3-compatible object storage for testing S3 functionality
+  - S3 API: `http://localhost:29000`
+  - Web UI: `http://localhost:29001`
+  - Credentials: `minioadmin` / `minioadmin`
+- **Fake GCS**: Google Cloud Storage emulator for testing GCS functionality
+  - API: `http://localhost:24443`
+
+### Recommended Development Environment
+
+#### VS Code with Dev Containers (Recommended)
+
+The easiest way to get started with development is using VS Code with dev containers. This provides a consistent, pre-configured development environment with all necessary dependencies.
+
+1. **Prerequisites**:
+   - Install [VS Code](https://code.visualstudio.com/)
+   - Install [Docker](https://www.docker.com/get-started)
+   - Install the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+
+2. **Setup**:
+   ```bash
+   git clone --recurse-submodules https://github.com/dentiny/duckdb-filesystem-observability.git
+   cd duckdb-filesystem-observability
+   code .
+   ```
+
+3. **Open in Dev Container**:
+   - VS Code will detect the dev container configuration
+   - Click "Reopen in Container" when prompted, or use `Ctrl+Shift+P` → "Dev Containers: Reopen in Container"
+   - The container will automatically build with all dependencies (VCPKG, build tools, etc.)
+
+4. **Development Workflow**:
+   ```bash
+   # Build the extension (fast parallel build)
+   CMAKE_BUILD_PARALLEL_LEVEL=$(nproc) GEN=ninja make
+
+   # Run tests
+   make test
+
+   # Run unit tests
+   make test_unit
+
+   # Format code
+   make format-all
+   ```
+
+The dev container includes:
+- All build dependencies (VCPKG, OpenSSL, CURL)
+- C++ development tools and extensions
+- Pre-configured CMake and debugging support
+- Git and other development utilities
