@@ -33,7 +33,12 @@ static void GetProfileStats(const DataChunk &args, ExpressionState &state, Vecto
 	const auto &observefs_instances = ObservabilityFsRefRegistry::Get().GetAllObservabilityFs();
 	for (auto *cur_filesystem : observefs_instances) {
 		latest_stat += StringUtil::Format("Current filesystem: %s\n", cur_filesystem->GetName());
-		latest_stat += cur_filesystem->GetHumanReadableStats();
+		const auto cur_stats_str = cur_filesystem->GetHumanReadableStats();
+		if (cur_stats_str.empty()) {
+			latest_stat += "No interested IO operations issued.";
+		} else {
+			latest_stat += cur_stats_str;
+		}
 		latest_stat += "\n";
 	}
 	result.Reference(Value(std::move(latest_stat)));

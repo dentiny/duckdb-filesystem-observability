@@ -36,6 +36,12 @@ LatencyGuardWrapper MetricsCollector::RecordOperationStart(IoOperation io_oper, 
 
 std::string MetricsCollector::GetHumanReadableStats() {
 	std::lock_guard<std::mutex> lck(latency_histogram_mu);
+
+	// If there's no stats collected, return empty string.
+	if (bucket_latency_histogram_.empty()) {
+		return "";
+	}
+
 	std::string human_readable_stats;
 	human_readable_stats +=
 	    StringUtil::Format("Overall latency: \n%s\n", overall_latency_histogram_->GetHumanReadableStats());

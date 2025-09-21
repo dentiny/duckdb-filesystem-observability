@@ -30,6 +30,7 @@ public:
 	// Clear observability data.
 	void ClearObservabilityData();
 	// Get human-readable metrics stats.
+	// If no stats collected, which means no interested IO operations for current filesystem.
 	std::string GetHumanReadableStats();
 
 	// Doesn't update file offset (which acts as `PRead` semantics).

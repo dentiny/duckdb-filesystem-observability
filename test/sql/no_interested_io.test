@@ -1,0 +1,17 @@
+# name: test/sql/no_interested_io.test
+# description: test observefs extension displayed content without IO operations
+# group: [sql]
+
+require observefs
+
+query I
+SELECT x
+FROM UNNEST(REGEXP_SPLIT_TO_ARRAY(observefs_get_profile(), '\n')) AS t(x)
+WHERE x <> '';
+----
+Current filesystem: observability-HTTPFileSystem
+No interested IO operations issued.
+Current filesystem: observability-HuggingFaceFileSystem
+No interested IO operations issued.
+Current filesystem: observability-S3FileSystem
+No interested IO operations issued.
