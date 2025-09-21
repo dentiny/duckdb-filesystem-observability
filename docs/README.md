@@ -57,36 +57,39 @@ The dev container includes additional services for testing:
 The easiest way to get started with development is using VS Code with dev containers. This provides a consistent, pre-configured development environment with all necessary dependencies.
 
 1. **Prerequisites**:
-   - Install [VS Code](https://code.visualstudio.com/)
-   - Install [Docker](https://www.docker.com/get-started)
-   - Install the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+- Install [VS Code](https://code.visualstudio.com/)
+- Install [Docker](https://www.docker.com/get-started)
+- Install the [Dev Containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
 
 2. **Setup**:
-   ```bash
-   git clone --recurse-submodules https://github.com/dentiny/duckdb-filesystem-observability.git
-   cd duckdb-filesystem-observability
-   code .
-   ```
+```bash
+git clone --recurse-submodules https://github.com/dentiny/duckdb-filesystem-observability.git
+cd duckdb-filesystem-observability
+code .
+```
 
 3. **Open in Dev Container**:
-   - VS Code will detect the dev container configuration
-   - Click "Reopen in Container" when prompted, or use `Ctrl+Shift+P` → "Dev Containers: Reopen in Container"
-   - The container will automatically build with all dependencies (VCPKG, build tools, etc.)
+- VS Code will detect the dev container configuration
+- Click "Reopen in Container" when prompted, or use `Ctrl+Shift+P` → "Dev Containers: Reopen in Container"
+- The container will automatically build with all dependencies (VCPKG, build tools, etc.)
 
 4. **Development Workflow**:
-   ```bash
-   # Build the extension (fast parallel build)
-   CMAKE_BUILD_PARALLEL_LEVEL=$(nproc) GEN=ninja make
+```bash
+# Build the extension (fast parallel build)
+CMAKE_BUILD_PARALLEL_LEVEL=$(nproc) GEN=ninja make
 
-   # Run tests
-   make test
+# Run tests
+make test
 
-   # Run unit tests
-   make test_unit
+# Run unit tests
+make test_unit
 
-   # Format code
-   make format-all
-   ```
+# Run SQL tests
+make test_reldebug
+
+# Format code
+make format-all
+```
 
 The dev container includes:
 - All build dependencies (VCPKG, OpenSSL, CURL)
@@ -98,7 +101,7 @@ The dev container includes:
 To run the extension code, simply start the shell with `./build/release/duckdb`. This shell will have the extension pre-loaded.  
 
 Now we can use the features from the extension directly in DuckDB. The template contains a single scalar function `quack()` that takes a string arguments and returns a string:
-```
+```sql
 D SELECT * FROM duckdb_extensions() WHERE extension_name = 'observefs';
 ┌────────────────┬─────────┬───────────┬──────────────┬─────────────┬───────────┬───────────────────┬───────────────────┬────────────────┐
 │ extension_name │ loaded  │ installed │ install_path │ description │  aliases  │ extension_version │   install_mode    │ installed_from │
@@ -106,10 +109,4 @@ D SELECT * FROM duckdb_extensions() WHERE extension_name = 'observefs';
 ├────────────────┼─────────┼───────────┼──────────────┼─────────────┼───────────┼───────────────────┼───────────────────┼────────────────┤
 │ observefs      │ true    │ true      │ (BUILT-IN)   │             │ []        │                   │ STATICALLY_LINKED │                │
 └────────────────┴─────────┴───────────┴──────────────┴─────────────┴───────────┴───────────────────┴───────────────────┴────────────────┘
-```
-
-## Running the tests
-Different tests can be created for DuckDB extensions. The primary way of testing DuckDB extensions should be the SQL tests in `./test/sql`. These SQL tests can be run using:
-```sh
-make test-all
 ```

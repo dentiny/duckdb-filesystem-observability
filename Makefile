@@ -1,7 +1,7 @@
 PROJ_DIR := $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
 
 # Configuration of extension
-EXT_NAME=cache_httpfs
+EXT_NAME=observefs
 EXT_CONFIG=${PROJ_DIR}extension_config.cmake
 
 # Include the Makefile from extension-ci-tools
@@ -21,4 +21,4 @@ test_reldebug_unit: all
 test_debug_unit: debug
 	find build/debug/extension/observefs/ -type f -name "test*" -not -name "*.o" -not -name "*.cpp" -not -name "*.d" -exec {} \;
 
-PHONY: format-all test_unit test_debug_unit
+PHONY: format-all test_unit test_reldebug_unit test_debug_unit
