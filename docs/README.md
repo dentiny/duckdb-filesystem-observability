@@ -1,7 +1,7 @@
 ## Getting started
 First step to getting started is to create your own repo from this template by clicking `Use this template`. Then clone your new repository using 
 ```sh
-git clone --recurse-submodules git@github.com:dentiny/duckdb-filesystem-observability.git
+git clone --recurse-submodules https://github.com/dentiny/duckdb-filesystem-observability.git
 ```
 Note that `--recurse-submodules` will ensure DuckDB is pulled which is required to build the extension.
 
