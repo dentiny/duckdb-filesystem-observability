@@ -1,0 +1,10 @@
+# name: test/sql/extension.test
+# description: test observefs extension loading
+# group: [sql]
+
+require observefs
+
+query I
+SELECT COUNT(*) FROM duckdb_extensions() WHERE extension_name = 'observefs';
+----
+1
