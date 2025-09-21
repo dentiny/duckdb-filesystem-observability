@@ -14,6 +14,9 @@
 
 namespace duckdb {
 
+// Current duckdb instance; store globally to retrieve filesystem instance inside of it.
+static DatabaseInstance *duckdb_instance = nullptr;
+
 // Clear observability data for all filesystems.
 static void ClearObservabilityData(const DataChunk &args, ExpressionState &state, Vector &result) {
 	auto observefs_instances = ObservabilityFsRefRegistry::Get().GetAllObservabilityFs();
@@ -34,6 +37,28 @@ static void GetProfileStats(const DataChunk &args, ExpressionState &state, Vecto
 		latest_stat += "\n";
 	}
 	result.Reference(Value(std::move(latest_stat)));
+}
+
+// Wrap the filesystem with extension cache filesystem.
+// Throw exception if the requested filesystem hasn't been registered into duckdb instance.
+static void WrapFileSystem(const DataChunk &args, ExpressionState &state, Vector &result) {
+	D_ASSERT(args.ColumnCount() == 1);
+	const string filesystem_name = args.GetValue(/*col_idx=*/0, /*index=*/0).ToString();
+
+	// duckdb instance has a opener filesystem, which is a wrapper around virtual filesystem.
+	auto &opener_filesystem = duckdb_instance->GetFileSystem().Cast<OpenerFileSystem>();
+	auto &vfs = opener_filesystem.GetFileSystem();
+	auto internal_filesystem = vfs.ExtractSubSystem(filesystem_name);
+	if (internal_filesystem == nullptr) {
+		throw InvalidInputException("Filesystem %s hasn't been registered yet!", filesystem_name);
+	}
+
+	auto observe_filesystem = make_uniq<ObservabilityFileSystem>(std::move(internal_filesystem));
+	ObservabilityFsRefRegistry::Get().Register(observe_filesystem.get());
+	vfs.RegisterSubSystem(std::move(observe_filesystem));
+
+	constexpr bool SUCCESS = true;
+	result.Reference(Value(SUCCESS));
 }
 
 static void LoadInternal(ExtensionLoader &loader) {
@@ -72,10 +97,23 @@ static void LoadInternal(ExtensionLoader &loader) {
 	ScalarFunction get_profile_stats_function("observefs_get_profile", /*arguments=*/ {},
 	                                          /*return_type=*/LogicalType::VARCHAR, GetProfileStats);
 	loader.RegisterFunction(get_profile_stats_function);
+
+	// Register a function to wrap all duckdb-vfs-compatible filesystems. By default only httpfs filesystem instances
+	// are wrapped. Usage for the target filesystem can be used as normal.
+	//
+	// Example usage:
+	// D. LOAD azure;
+	// -- Wrap filesystem with its name.
+	// D. SELECT observefs_wrap_filesystem('AzureBlobStorageFileSystem');
+	ScalarFunction wrap_cache_filesystem_function("observefs_wrap_filesystem",
+	                                              /*arguments=*/ {LogicalTypeId::VARCHAR},
+	                                              /*return_type=*/LogicalTypeId::BOOLEAN, WrapFileSystem);
+	loader.RegisterFunction(wrap_cache_filesystem_function);
 }
 
 void ObservefsExtension::Load(ExtensionLoader &loader) {
 	auto &db = loader.GetDatabaseInstance();
+	duckdb_instance = &db;
 
 	// To achieve full compatibility for duckdb-httpfs extension, all related functions/types/... should be supported,
 	// so we load it first.

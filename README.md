@@ -20,6 +20,9 @@ COPY (SELECT observefs_get_profile()) TO '/tmp/output.txt';
 
 -- Clear metrics for fresh analysis
 SELECT observefs_clear();
+
+-- Wrap ANY filesystem which is compatible with duckdb, for example, azure filesystem.
+SELECT observefs_wrap_filesystem('AzureBlobStorageFileSystem');
 ```
 
 The output includes comprehensive metrics:
