@@ -9,22 +9,13 @@
 #include "duckdb/common/unordered_map.hpp"
 #include "duckdb/common/vector.hpp"
 #include "histogram.hpp"
+#include "io_operation.hpp"
 #include "quantile_estimator.hpp"
 
 namespace duckdb {
 
 // Forward declaration.
 class OperationLatencyCollector;
-
-// IO operation types.
-//
-// TODO(hjiang): Add more IO operations.
-enum class IoOperation {
-	kOpen = 0,
-	kRead = 1,
-	kList = 2,
-	kUnknown = 3,
-};
 
 // Heuristic estimation of single IO request latency, out of which range are classified as outliers.
 struct LatencyHeuristic {
@@ -67,6 +58,7 @@ public:
 	LatencyGuard RecordOperationStart(IoOperation io_oper);
 
 	// Represent stats in human-readable format.
+	// Return empty string if no stats.
 	std::string GetHumanReadableStats();
 
 private:
@@ -79,13 +71,6 @@ private:
 
 	// Mark the end of the a completed IO operation, disregard it's successful or not.
 	void RecordOperationEnd(IoOperation io_oper, int64_t latency_millisec);
-
-	static constexpr auto kIoOperationCount = static_cast<size_t>(IoOperation::kUnknown);
-
-	// Operation names, indexed by operation enums.
-	inline static const std::array<const char *, kIoOperationCount> OPER_NAMES = {
-		"open", "read", "list"
-	};
 
 	// Only records finished operations, which maps from io operation to histogram.
 	std::mutex latency_collector_mu;

@@ -1,5 +1,6 @@
 #include "operation_latency_collector.hpp"
 
+#include "duckdb/common/string_util.hpp"
 #include "no_destructor.hpp"
 #include "time_utils.hpp"
 
@@ -22,7 +23,7 @@ LatencyGuard::~LatencyGuard() {
 }
 
 OperationLatencyCollector::OperationLatencyCollector() {
-	for (size_t i = 0; i < kLatencyHeuristics.size(); ++i) {
+	for (size_t i = 0; i < kIoOperationCount; ++i) {
 		const auto &heuristic = kLatencyHeuristics[i];
 		latency_collector[i].histogram = make_uniq<Histogram>(heuristic.min_latency_ms, heuristic.max_latency_ms, heuristic.num_buckets);
 		latency_collector[i].histogram->SetStatsDistribution(*LATENCY_HISTOGRAM_ITEM, *LATENCY_HISTOGRAM_UNIT);

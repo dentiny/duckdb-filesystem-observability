@@ -28,6 +28,7 @@ set(EXTENSION_SOURCES
     src/observefs_extension.cpp
     src/observability_filesystem.cpp
     src/operation_latency_collector.cpp
+    src/operation_size_collector.cpp
     src/quantile.cpp
     src/quantilelite.cpp
     src/quantile_estimator.cpp

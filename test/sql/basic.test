@@ -1,0 +1,11 @@
+# name: test/sql/basic.test
+# description: test basic functionality for observefs
+# group: [sql]
+
+require observefs
+
+statement ok
+SELECT COUNT(*) FROM read_csv_auto('https://raw.githubusercontent.com/dentiny/duck-read-cache-fs/refs/heads/main/test/data/stock-exchanges.csv');
+
+statement ok
+SELECT observefs_get_profile();
