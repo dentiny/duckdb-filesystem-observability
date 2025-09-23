@@ -76,6 +76,7 @@ std::string Histogram::FormatString() const {
 	res += StringUtil::Format("Max %s = %lf %s\n", distribution_name_, max(), distribution_unit_);
 	res += StringUtil::Format("Min %s = %lf %s\n", distribution_name_, min(), distribution_unit_);
 	res += StringUtil::Format("Mean %s = %lf %s\n", distribution_name_, mean(), distribution_unit_);
+	res += StringUtil::Format("Count = %d\n", counts());
 
 	// Format stats distribution.
 	const double interval = (max_val_ - min_val_) / num_bkt_;

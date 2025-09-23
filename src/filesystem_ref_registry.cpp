@@ -11,17 +11,18 @@ namespace duckdb {
 }
 
 void ObservabilityFsRefRegistry::Register(ObservabilityFileSystem *fs) {
-	auto* internal_filesystem = fs->GetInternalFileSystem();
+	auto *internal_filesystem = fs->GetInternalFileSystem();
 
 	// Validate internal filesystem is not another observability filesystem.
-	if (dynamic_cast<ObservabilityFileSystem*>(internal_filesystem) != nullptr) {
+	if (dynamic_cast<ObservabilityFileSystem *>(internal_filesystem) != nullptr) {
 		throw InvalidInputException("Cannot wrap an observabibility filesystem %s!", fs->GetName());
 	}
- 
+
 	// Validate filesystem hasn't been registered before.
-	for (const auto& already_registered : observability_filesystems) {
+	for (const auto &already_registered : observability_filesystems) {
 		if (already_registered->GetInternalFileSystem()->GetName() == internal_filesystem->GetName()) {
-			throw InvalidInputException("Cannot re-register the same internal filesystem %s!", internal_filesystem->GetName());
+			throw InvalidInputException("Cannot re-register the same internal filesystem %s!",
+			                            internal_filesystem->GetName());
 		}
 	}
 

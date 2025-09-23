@@ -28,6 +28,7 @@ set(EXTENSION_SOURCES
     src/observefs_extension.cpp
     src/observability_filesystem.cpp
     src/operation_latency_collector.cpp
+    src/operation_size_collector.cpp
     src/quantile.cpp
     src/quantilelite.cpp
     src/quantile_estimator.cpp
@@ -48,8 +49,10 @@ build_static_extension(${TARGET_NAME} ${EXTENSION_SOURCES})
 build_loadable_extension(${TARGET_NAME} " " ${EXTENSION_SOURCES})
 
 # Link OpenSSL in both the static library as the loadable extension
-target_link_libraries(${EXTENSION_NAME} OpenSSL::SSL OpenSSL::Crypto CURL::libcurl)
-target_link_libraries(${LOADABLE_EXTENSION_NAME} OpenSSL::SSL OpenSSL::Crypto CURL::libcurl)
+target_link_libraries(${EXTENSION_NAME} OpenSSL::SSL OpenSSL::Crypto
+                      CURL::libcurl)
+target_link_libraries(${LOADABLE_EXTENSION_NAME} OpenSSL::SSL OpenSSL::Crypto
+                      CURL::libcurl)
 
 install(
   TARGETS ${EXTENSION_NAME}

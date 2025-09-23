@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <mutex>
 
 #include "duckdb/common/string.hpp"
@@ -7,6 +8,7 @@
 #include "duckdb/common/vector.hpp"
 #include "histogram.hpp"
 #include "operation_latency_collector.hpp"
+#include "operation_size_collector.hpp"
 
 namespace duckdb {
 
@@ -34,7 +36,10 @@ public:
 	MetricsCollector();
 	~MetricsCollector() = default;
 
+	// Record operation start without size.
 	LatencyGuardWrapper RecordOperationStart(IoOperation io_oper, const string &filepath);
+	// Record operation size with size.
+	LatencyGuardWrapper RecordOperationStart(IoOperation io_oper, const string &filepath, int64_t bytes_to_read);
 
 	// Represent stats in human-readable format.
 	// If no stats collected, an empty string will be returned.
@@ -44,11 +49,15 @@ public:
 	void Reset();
 
 private:
+	LatencyGuardWrapper RecordOperationStartWithLock(IoOperation io_oper, const string &filepath);
+
 	// Overall latency histogram.
-	std::mutex latency_histogram_mu;
-	unique_ptr<OperationLatencyCollector> overall_latency_histogram_;
+	std::mutex mu;
+	unique_ptr<OperationLatencyCollector> overall_latency_collector_;
 	// Bucket-wise latency histogram.
-	unordered_map<string, unique_ptr<OperationLatencyCollector>> bucket_latency_histogram_;
+	unordered_map<string, unique_ptr<OperationLatencyCollector>> bucket_latency_collector_;
+	// Operation size collector.
+	unique_ptr<OperationSizeCollector> operation_size_collector_;
 };
 
 } // namespace duckdb
