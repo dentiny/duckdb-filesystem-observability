@@ -11,17 +11,17 @@ namespace duckdb {
 
 class OperationSizeCollector {
 public:
-    OperationSizeCollector();
-    ~OperationSizeCollector() = default;
+	OperationSizeCollector();
+	~OperationSizeCollector() = default;
 
-    void RecordOperationSize(IoOperation io_oper, int64_t request_size);
+	void RecordOperationSize(IoOperation io_oper, int64_t request_size);
 
-    // Collect human-readable stats for operation size.
-    std::string GetHumanReadableStats();
+	// Collect human-readable stats for operation size.
+	std::string GetHumanReadableStats();
 
 private:
-    std::mutex mu;
+	std::mutex mu;
 	std::array<unique_ptr<Histogram>, kIoOperationCount> request_size_histograms;
 };
 
-}  // namespace duckdb
+} // namespace duckdb

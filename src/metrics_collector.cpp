@@ -11,9 +11,9 @@ void LatencyGuardWrapper::TakeGuard(LatencyGuard latency_guard) {
 	latency_guards.emplace_back(std::move(latency_guard));
 }
 
-MetricsCollector::MetricsCollector() 
-	: overall_latency_collector_(make_uniq<OperationLatencyCollector>()),
-	  operation_size_collector_(make_uniq<OperationSizeCollector>()) {
+MetricsCollector::MetricsCollector()
+    : overall_latency_collector_(make_uniq<OperationLatencyCollector>()),
+      operation_size_collector_(make_uniq<OperationSizeCollector>()) {
 }
 
 LatencyGuardWrapper MetricsCollector::RecordOperationStart(IoOperation io_oper, const string &filepath) {
@@ -21,7 +21,8 @@ LatencyGuardWrapper MetricsCollector::RecordOperationStart(IoOperation io_oper, 
 	return RecordOperationStartWithLock(std::move(io_oper), filepath);
 }
 
-LatencyGuardWrapper MetricsCollector::RecordOperationStart(IoOperation io_oper, const string &filepath, int64_t bytes_to_read) {
+LatencyGuardWrapper MetricsCollector::RecordOperationStart(IoOperation io_oper, const string &filepath,
+                                                           int64_t bytes_to_read) {
 	std::lock_guard<std::mutex> lck(mu);
 	operation_size_collector_->RecordOperationSize(io_oper, bytes_to_read);
 	return RecordOperationStartWithLock(std::move(io_oper), filepath);
@@ -35,10 +36,10 @@ LatencyGuardWrapper MetricsCollector::RecordOperationStartWithLock(IoOperation i
 	guard_wrapper.TakeGuard(std::move(overall_latency_guard));
 
 	if (!bucket.empty()) {
-        auto& cur_bucket_hist = bucket_latency_collector_[bucket];
-        if (cur_bucket_hist == nullptr) {
-            cur_bucket_hist = make_uniq<OperationLatencyCollector>();
-        }
+		auto &cur_bucket_hist = bucket_latency_collector_[bucket];
+		if (cur_bucket_hist == nullptr) {
+			cur_bucket_hist = make_uniq<OperationLatencyCollector>();
+		}
 		auto bucket_latency_guard = cur_bucket_hist->RecordOperationStart(io_oper);
 		guard_wrapper.TakeGuard(std::move(bucket_latency_guard));
 	}
@@ -76,7 +77,7 @@ std::string MetricsCollector::GetHumanReadableStats() {
 void MetricsCollector::Reset() {
 	std::lock_guard<std::mutex> lck(mu);
 	overall_latency_collector_ = make_uniq<OperationLatencyCollector>();
-    bucket_latency_collector_.clear();
+	bucket_latency_collector_.clear();
 }
 
 } // namespace duckdb

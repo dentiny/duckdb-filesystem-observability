@@ -25,12 +25,12 @@ struct LatencyHeuristic {
 };
 
 inline constexpr std::array<LatencyHeuristic, static_cast<size_t>(IoOperation::kUnknown)> kLatencyHeuristics = {{
-	// kOpen
-	{0, 1000, 100},
-	// kRead
-	{0, 1000, 100},
-	// kList
-	{0, 3000, 100},
+    // kOpen
+    {0, 1000, 100},
+    // kRead
+    {0, 1000, 100},
+    // kList
+    {0, 3000, 100},
 }};
 
 // A RAII guard to measure latency for IO operations.

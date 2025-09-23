@@ -18,8 +18,6 @@ enum class IoOperation {
 inline constexpr auto kIoOperationCount = static_cast<size_t>(IoOperation::kUnknown);
 
 // Operation names, indexed by operation enums.
-inline constexpr std::array<const char *, kIoOperationCount> OPER_NAMES = {
-    "open", "read", "list"
-};
+inline constexpr std::array<const char *, kIoOperationCount> OPER_NAMES = {"open", "read", "list"};
 
 } // namespace duckdb
