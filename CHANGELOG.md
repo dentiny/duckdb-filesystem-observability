@@ -1,3 +1,21 @@
+# 0.3.0
+
+## Added
+
+- Add read request size metrics ([#30])
+
+[#30]: https://github.com/dentiny/duckdb-filesystem-observability/pull/30
+
+## Fixed
+
+- Fix HTTP request stats report ([#35])
+
+[#35]: https://github.com/dentiny/duckdb-filesystem-observability/pull/35
+
+- Fix quantile calculation when there're small number of data points ([#36])
+
+[#36]: https://github.com/dentiny/duckdb-filesystem-observability/pull/36
+
 # 0.2.0
 
 ## Added
