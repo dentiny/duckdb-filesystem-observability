@@ -25,6 +25,7 @@ set(EXTENSION_SOURCES
     src/filesystem_ref_registry.cpp
     src/histogram.cpp
     src/metrics_collector.cpp
+    src/numeric_utils.cpp
     src/observefs_extension.cpp
     src/observability_filesystem.cpp
     src/operation_latency_collector.cpp
