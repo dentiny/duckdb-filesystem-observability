@@ -50,16 +50,14 @@ LatencyGuardWrapper MetricsCollector::RecordOperationStartWithLock(IoOperation i
 std::string MetricsCollector::GetHumanReadableStats() {
 	std::lock_guard<std::mutex> lck(mu);
 
-	// If there's no stats collected, return empty string.
-	if (bucket_latency_collector_.empty()) {
-		return "";
-	}
-
 	std::string human_readable_stats;
 
 	// Collect latency stats.
-	human_readable_stats +=
-	    StringUtil::Format("Overall latency: \n%s\n", overall_latency_collector_->GetHumanReadableStats());
+	const string overall_latency_stats_str = overall_latency_collector_->GetHumanReadableStats();
+	if (!overall_latency_stats_str.empty()) {
+		human_readable_stats += StringUtil::Format("Overall latency: \n%s\n", overall_latency_stats_str);
+	}
+
 	for (const auto &[bucket, histogram] : bucket_latency_collector_) {
 		human_readable_stats += StringUtil::Format("  Bucket: %s\n", bucket);
 		human_readable_stats += StringUtil::Format("  Latency: %s\n", histogram->GetHumanReadableStats());
