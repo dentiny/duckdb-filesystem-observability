@@ -22,7 +22,7 @@ COPY (SELECT observefs_get_profile()) TO '/tmp/output.txt';
 SELECT observefs_clear();
 
 -- List currently registered filesystems (useful before wrapping)
-SELECT unnest(observefs_list_registered_filesystems());
+SELECT observefs_list_registered_filesystems();
 
 -- Wrap any DuckDB-compatible filesystem by name (e.g., Azure Blob Storage)
 -- Ensure the corresponding extension is loaded first (e.g., LOAD azure;)
