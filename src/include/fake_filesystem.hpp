@@ -8,12 +8,13 @@
 namespace duckdb {
 
 // Forward declaration.
-class CacheHttpfsFakeFileSystem;
+class ObserveHttpfsFakeFileSystem;
 
-class CacheHttpfsFakeFsHandle : public FileHandle {
+class ObserveHttpfsFakeFsHandle : public FileHandle {
 public:
-	CacheHttpfsFakeFsHandle(string path, unique_ptr<FileHandle> internal_file_handle_p, CacheHttpfsFakeFileSystem &fs);
-	~CacheHttpfsFakeFsHandle() override = default;
+	ObserveHttpfsFakeFsHandle(string path, unique_ptr<FileHandle> internal_file_handle_p,
+	                          ObserveHttpfsFakeFileSystem &fs);
+	~ObserveHttpfsFakeFsHandle() override = default;
 	void Close() override {
 		internal_file_handle->Close();
 	}
@@ -22,9 +23,9 @@ public:
 };
 
 // WARNING: fake filesystem is used for testing purpose and shouldn't be used in production.
-class CacheHttpfsFakeFileSystem : public LocalFileSystem {
+class ObserveHttpfsFakeFileSystem : public LocalFileSystem {
 public:
-	CacheHttpfsFakeFileSystem();
+	ObserveHttpfsFakeFileSystem();
 	bool CanHandleFile(const string &path) override;
 	std::string GetName() const override {
 		return "observefs_fake_filesystem";

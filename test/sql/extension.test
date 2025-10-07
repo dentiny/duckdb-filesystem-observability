@@ -8,3 +8,11 @@ query I
 SELECT COUNT(*) FROM duckdb_extensions() WHERE extension_name = 'observefs';
 ----
 1
+
+query I
+SELECT unnest(observefs_list_registered_filesystems());
+----
+observability-HTTPFileSystem
+observability-HuggingFaceFileSystem
+observability-S3FileSystem
+observefs_fake_filesystem
