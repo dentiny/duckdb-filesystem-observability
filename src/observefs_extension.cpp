@@ -4,6 +4,7 @@
 #include "duckdb/common/exception.hpp"
 #include "duckdb/common/opener_file_system.hpp"
 #include "duckdb/common/string_util.hpp"
+#include "duckdb/common/unique_ptr.hpp"
 #include "fake_filesystem.hpp"
 #include "filesystem_ref_registry.hpp"
 #include "hffs.hpp"
@@ -72,31 +73,75 @@ static void WrapFileSystem(const DataChunk &args, ExpressionState &state, Vector
 	result.Reference(Value(SUCCESS));
 }
 
+// List all registered function for the database instance.
+static void ListRegisteredFileSystems(DataChunk &args, ExpressionState &state, Vector &result) {
+	auto &result_entries = ListVector::GetEntry(result);
+
+	// duckdb instance has a opener filesystem, which is a wrapper around virtual filesystem.
+	auto &duckdb_instance = GetDatabaseInstance(state);
+	auto &opener_filesystem = duckdb_instance.GetFileSystem().Cast<OpenerFileSystem>();
+	auto &vfs = opener_filesystem.GetFileSystem();
+	auto filesystems = vfs.ListSubSystems();
+	std::sort(filesystems.begin(), filesystems.end());
+
+	// Set filesystem instances.
+	ListVector::Reserve(result, filesystems.size());
+	ListVector::SetListSize(result, filesystems.size());
+	auto data = FlatVector::GetData<string_t>(result_entries);
+	for (int idx = 0; idx < filesystems.size(); ++idx) {
+		data[idx] = StringVector::AddString(result_entries, std::move(filesystems[idx]));
+	}
+
+	// Define the list element (offset + length)
+	auto list_data = FlatVector::GetData<list_entry_t>(result);
+	list_data[0].offset = 0;
+	list_data[0].length = filesystems.size();
+
+	// Set result as valid.
+	FlatVector::SetValidity(result, ValidityMask(filesystems.size()));
+}
+
 static void LoadInternal(ExtensionLoader &loader) {
 	ObservabilityFsRefRegistry::Get().Reset();
 
 	// Register filesystem instance to instance.
-	auto &instance = loader.GetDatabaseInstance();
-	auto &fs = instance.GetFileSystem();
+	auto &duckdb_instance = loader.GetDatabaseInstance();
+	auto &opener_filesystem = duckdb_instance.GetFileSystem().Cast<OpenerFileSystem>();
+	auto &vfs = opener_filesystem.GetFileSystem();
 
 	// TODO(hjiang): Register a fake filesystem at extension load for testing purpose. This is not ideal since
 	// additional necessary instance is shipped in the extension. Local filesystem is not viable because it's not
 	// registered in virtual filesystem. A better approach is find another filesystem not in httpfs extension.
-	fs.RegisterSubSystem(make_uniq<CacheHttpfsFakeFileSystem>());
+	vfs.RegisterSubSystem(make_uniq<ObserveHttpfsFakeFileSystem>());
 
 	// By default register all filesystem instances inside of httpfs.
-	auto observability_httpfs_filesystem = make_uniq<ObservabilityFileSystem>(make_uniq<HTTPFileSystem>());
+	//
+	// Register http filesystem.
+	auto http_fs = vfs.ExtractSubSystem("HTTPFileSystem");
+	if (http_fs == nullptr) {
+		http_fs = make_uniq<HTTPFileSystem>();
+	}
+	auto observability_httpfs_filesystem = make_uniq<ObservabilityFileSystem>(std::move(http_fs));
 	ObservabilityFsRefRegistry::Get().Register(observability_httpfs_filesystem.get());
-	fs.RegisterSubSystem(std::move(observability_httpfs_filesystem));
+	vfs.RegisterSubSystem(std::move(observability_httpfs_filesystem));
 
-	auto observability_hf_filesystem = make_uniq<ObservabilityFileSystem>(make_uniq<HuggingFaceFileSystem>());
+	// Register hugging filesystem.
+	auto hf_fs = vfs.ExtractSubSystem("HuggingFaceFileSystem");
+	if (hf_fs == nullptr) {
+		hf_fs = make_uniq<HuggingFaceFileSystem>();
+	}
+	auto observability_hf_filesystem = make_uniq<ObservabilityFileSystem>(std::move(hf_fs));
 	ObservabilityFsRefRegistry::Get().Register(observability_hf_filesystem.get());
-	fs.RegisterSubSystem(std::move(observability_hf_filesystem));
+	vfs.RegisterSubSystem(std::move(observability_hf_filesystem));
 
-	auto observability_s3_filesystem =
-	    make_uniq<ObservabilityFileSystem>(make_uniq<S3FileSystem>(BufferManager::GetBufferManager(instance)));
+	// Register s3 filesystem.
+	auto s3_fs = vfs.ExtractSubSystem("S3FileSystem");
+	if (s3_fs == nullptr) {
+		s3_fs = make_uniq<S3FileSystem>(BufferManager::GetBufferManager(duckdb_instance));
+	}
+	auto observability_s3_filesystem = make_uniq<ObservabilityFileSystem>(std::move(s3_fs));
 	ObservabilityFsRefRegistry::Get().Register(observability_s3_filesystem.get());
-	fs.RegisterSubSystem(std::move(observability_s3_filesystem));
+	vfs.RegisterSubSystem(std::move(observability_s3_filesystem));
 
 	// Register observability data cleanup function.
 	ScalarFunction clear_cache_function("observefs_clear", /*arguments=*/ {},
@@ -108,6 +153,13 @@ static void LoadInternal(ExtensionLoader &loader) {
 	ScalarFunction get_profile_stats_function("observefs_get_profile", /*arguments=*/ {},
 	                                          /*return_type=*/LogicalType::VARCHAR, GetProfileStats);
 	loader.RegisterFunction(get_profile_stats_function);
+
+	// Register a function to list all existing filesystem instances, which is useful for wrapping.
+	ScalarFunction list_registered_filesystem_function("observefs_list_registered_filesystems",
+	                                                   /*arguments=*/ {},
+	                                                   /*return_type=*/LogicalType::LIST(LogicalType::VARCHAR),
+	                                                   ListRegisteredFileSystems);
+	loader.RegisterFunction(list_registered_filesystem_function);
 
 	// Register a function to wrap all duckdb-vfs-compatible filesystems. By default only httpfs filesystem instances
 	// are wrapped. Usage for the target filesystem can be used as normal.
