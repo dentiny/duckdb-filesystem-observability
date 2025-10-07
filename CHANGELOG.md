@@ -1,3 +1,17 @@
+# 0.3.1
+
+## Added
+
+- Add a SQL function to list all registered filesystems ([#38])
+
+[#38]: https://github.com/dentiny/duckdb-filesystem-observability/pull/38
+
+## Fixed
+
+- Fix bug that httpfs filesystems are registered twice, one as unwrapped raw filesystem instance, one wrapped in observefs 
+
+[#38]: https://github.com/dentiny/duckdb-filesystem-observability/pull/38
+
 # 0.3.0
 
 ## Added
