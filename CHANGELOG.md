@@ -1,3 +1,9 @@
+# 0.3.2
+
+## Changed
+
+- Upgrade duckdb to v1.4.1, and duckdb-httpfs and extension-ci-tools to latest
+
 # 0.3.1
 
 ## Added
