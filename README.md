@@ -9,7 +9,7 @@ Whether you're optimizing data pipelines, debugging performance issues, or under
 ## Usage
 ```sql
 -- Install and load the ObserveFS extension
-FORCE INSTALL observefs;
+FORCE INSTALL observefs FROM community;
 LOAD observefs;
 
 -- Query remote data (automatically monitored)
@@ -21,7 +21,11 @@ COPY (SELECT observefs_get_profile()) TO '/tmp/output.txt';
 -- Clear metrics for fresh analysis
 SELECT observefs_clear();
 
--- Wrap ANY filesystem which is compatible with duckdb, for example, azure filesystem.
+-- List currently registered filesystems (useful before wrapping)
+SELECT observefs_list_registered_filesystems();
+
+-- Wrap any DuckDB-compatible filesystem by name (e.g., Azure Blob Storage)
+-- Ensure the corresponding extension is loaded first (e.g., LOAD azure;)
 SELECT observefs_wrap_filesystem('AzureBlobStorageFileSystem');
 ```
 
