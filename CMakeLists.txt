@@ -34,6 +34,8 @@ set(EXTENSION_SOURCES
     src/quantilelite.cpp
     src/quantile_estimator.cpp
     src/string_utils.cpp
+    src/tcp_connection_fetcher.cpp
+    src/tcp_connection_query_function.cpp
     src/time_utils.cpp
     duckdb-httpfs/src/create_secret_functions.cpp
     duckdb-httpfs/src/crypto.cpp
@@ -75,3 +77,7 @@ target_link_libraries(test_string_utils ${EXTENSION_NAME})
 
 add_executable(test_quantile_estimator unit/test_quantile_estimator.cpp)
 target_link_libraries(test_quantile_estimator ${EXTENSION_NAME})
+
+add_executable(tcp_connection_fetcher_test
+               integration/tcp_connection_fetcher_test.cpp)
+target_link_libraries(tcp_connection_fetcher_test ${EXTENSION_NAME})

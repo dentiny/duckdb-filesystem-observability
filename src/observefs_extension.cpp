@@ -12,6 +12,7 @@
 #include "observefs_extension.hpp"
 #include "observability_filesystem.hpp"
 #include "s3fs.hpp"
+#include "tcp_connection_query_function.hpp"
 
 namespace duckdb {
 
@@ -172,6 +173,10 @@ static void LoadInternal(ExtensionLoader &loader) {
 	                                              /*arguments=*/ {LogicalTypeId::VARCHAR},
 	                                              /*return_type=*/LogicalTypeId::BOOLEAN, WrapFileSystem);
 	loader.RegisterFunction(wrap_cache_filesystem_function);
+
+	// Register TCP connection status function.
+	// WARNING: It works only on linux platform, it displays nothing on MacOs.
+	loader.RegisterFunction(GetTcpConnectionStatusFunc());
 }
 
 void ObservefsExtension::Load(ExtensionLoader &loader) {
