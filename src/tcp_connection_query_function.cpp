@@ -35,8 +35,8 @@ struct TcpConnectionData : public GlobalTableFunctionState {
 	uint64_t offset = 0;
 };
 
-unique_ptr<FunctionData> GetTcpConnectionFuncBind(ClientContext &context, TableFunctionBindInput &input,
-                                                  vector<LogicalType> &return_types, vector<string> &names) {
+unique_ptr<FunctionData> GetTcpConnectionNumFuncBind(ClientContext &context, TableFunctionBindInput &input,
+                                                     vector<LogicalType> &return_types, vector<string> &names) {
 	D_ASSERT(return_types.empty());
 	D_ASSERT(names.empty());
 
@@ -46,16 +46,17 @@ unique_ptr<FunctionData> GetTcpConnectionFuncBind(ClientContext &context, TableF
 	return_types.emplace_back(LogicalType::VARCHAR);
 	return_types.emplace_back(LogicalType::BIGINT);
 	names.emplace_back("IP");
-	names.emplace_back("connection number");
+	names.emplace_back("TCP connection number");
 
 	return nullptr;
 }
 
-unique_ptr<GlobalTableFunctionState> GetTcpConnectionFuncInit(ClientContext &context, TableFunctionInitInput &input) {
+unique_ptr<GlobalTableFunctionState> GetTcpConnectionNumFuncInit(ClientContext &context,
+                                                                 TableFunctionInitInput &input) {
 	auto result = make_uniq<TcpConnectionData>();
 	auto &tcp_connection_status = result->tcp_connection_status;
 
-	auto tcp_connection_map = GetTcpConnectionStatus();
+	auto tcp_connection_map = GetTcpConnectionNum();
 	tcp_connection_status.reserve(tcp_connection_map.size());
 	for (const auto &[cur_ip, cur_cnt] : tcp_connection_map) {
 		TcpConnectionStatus cur_tcp_conn_status {
@@ -72,7 +73,7 @@ unique_ptr<GlobalTableFunctionState> GetTcpConnectionFuncInit(ClientContext &con
 	return std::move(result);
 }
 
-void GetTcpConnectionTableFunc(ClientContext &context, TableFunctionInput &data_p, DataChunk &output) {
+void GetTcpConnectionNumTableFunc(ClientContext &context, TableFunctionInput &data_p, DataChunk &output) {
 	auto &data = data_p.global_state->Cast<TcpConnectionData>();
 
 	// All entries have been emitted.
@@ -92,12 +93,12 @@ void GetTcpConnectionTableFunc(ClientContext &context, TableFunctionInput &data_
 }
 } // namespace
 
-TableFunction GetTcpConnectionStatusFunc() {
+TableFunction GetTcpConnectionNumFunc() {
 	TableFunction get_tcp_conn_query_func {/*name=*/"observefs_get_tcp_connection",
 	                                       /*arguments=*/ {},
-	                                       /*function=*/GetTcpConnectionTableFunc,
-	                                       /*bind=*/GetTcpConnectionFuncBind,
-	                                       /*init_global=*/GetTcpConnectionFuncInit};
+	                                       /*function=*/GetTcpConnectionNumTableFunc,
+	                                       /*bind=*/GetTcpConnectionNumFuncBind,
+	                                       /*init_global=*/GetTcpConnectionNumFuncInit};
 	return get_tcp_conn_query_func;
 }
 } // namespace duckdb

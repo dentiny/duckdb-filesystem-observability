@@ -2,7 +2,7 @@
 
 #if defined(__APPLE__) && defined(__MACH__)
 namespace duckdb {
-unordered_map<string, int> GetTcpConnectionStatus() {
+unordered_map<string, int> GetTcpConnectionNum() {
 	return {};
 }
 } // namespace duckdb
@@ -62,16 +62,13 @@ void ParseProcTCP(const char *path, std::unordered_map<std::string, int> &per_re
 	const int ret = close(fd);
 	SYSCALL_THROW_IF_ERROR(ret);
 
+	// Ignore the first line, which is the prompt line.
+	// For example, "State Recv-Q Send-Q Local Address:Port   Peer Address:Port Process".
 	std::istringstream iss(content);
 	string cur_line;
-	bool first = true;
+	std::getline(iss, cur_line);
+
 	while (std::getline(iss, cur_line)) {
-		// Ignore the first line, which is the prompt line.
-		// For example, "State Recv-Q Send-Q Local Address:Port   Peer Address:Port Process".
-		if (first) {
-			first = false;
-			continue;
-		}
 		if (cur_line.empty()) {
 			continue;
 		}
@@ -95,7 +92,7 @@ void ParseProcTCP(const char *path, std::unordered_map<std::string, int> &per_re
 }
 } // namespace
 
-unordered_map<string, int> GetTcpConnectionStatus() {
+unordered_map<string, int> GetTcpConnectionNum() {
 	// Maps from IP to TCP connection count.
 	unordered_map<string, int> aggregated_tcp_conns;
 	ParseProcTCP(IPV4_TCP_PROC_FS_PATH, aggregated_tcp_conns);

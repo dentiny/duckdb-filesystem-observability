@@ -7,6 +7,6 @@
 namespace duckdb {
 
 // Get the table function to get system TCP connection status.
-TableFunction GetTcpConnectionStatusFunc();
+TableFunction GetTcpConnectionNumFunc();
 
 } // namespace duckdb

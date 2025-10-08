@@ -176,7 +176,7 @@ static void LoadInternal(ExtensionLoader &loader) {
 
 	// Register TCP connection status function.
 	// WARNING: It works only on linux platform, it displays nothing on MacOs.
-	loader.RegisterFunction(GetTcpConnectionStatusFunc());
+	loader.RegisterFunction(GetTcpConnectionNumFunc());
 }
 
 void ObservefsExtension::Load(ExtensionLoader &loader) {

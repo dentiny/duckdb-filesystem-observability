@@ -5,7 +5,7 @@
 
 namespace duckdb {
 
-// Get TCP connection status grouped by IP.
-unordered_map<string, int> GetTcpConnectionStatus();
+// Get TCP connection number grouped by IP.
+unordered_map<string, int> GetTcpConnectionNum();
 
 } // namespace duckdb
