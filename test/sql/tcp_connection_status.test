@@ -1,0 +1,8 @@
+# name: test/sql/tcp_connection_status.test
+# description: test observefs extension getting TCP connection status
+# group: [sql]
+
+require observefs
+
+statement ok
+SELECT * FROM observefs_get_tcp_connection();
