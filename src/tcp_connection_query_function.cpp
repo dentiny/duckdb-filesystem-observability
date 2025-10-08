@@ -65,6 +65,10 @@ unique_ptr<GlobalTableFunctionState> GetTcpConnectionFuncInit(ClientContext &con
 		tcp_connection_status.emplace_back(std::move(cur_tcp_conn_status));
 	}
 
+	// Sort by IP to provide stable output.
+	std::sort(tcp_connection_status.begin(), tcp_connection_status.end(),
+	          [](const TcpConnectionStatus &a, const TcpConnectionStatus &b) { return a.ip < b.ip; });
+
 	return std::move(result);
 }
 
