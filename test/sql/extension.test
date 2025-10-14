@@ -10,7 +10,7 @@ SELECT COUNT(*) FROM duckdb_extensions() WHERE extension_name = 'observefs';
 1
 
 query I
-SELECT unnest(observefs_list_registered_filesystems());
+SELECT * FROM observefs_list_registered_filesystems();
 ----
 observability-HTTPFileSystem
 observability-HuggingFaceFileSystem

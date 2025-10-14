@@ -7,6 +7,7 @@
 #include "duckdb/common/unique_ptr.hpp"
 #include "fake_filesystem.hpp"
 #include "filesystem_ref_registry.hpp"
+#include "filesystem_status_query_function.hpp"
 #include "hffs.hpp"
 #include "httpfs_extension.hpp"
 #include "observefs_extension.hpp"
@@ -192,11 +193,7 @@ static void LoadInternal(ExtensionLoader &loader) {
 	loader.RegisterFunction(get_profile_stats_function);
 
 	// Register a function to list all existing filesystem instances, which is useful for wrapping.
-	ScalarFunction list_registered_filesystem_function("observefs_list_registered_filesystems",
-	                                                   /*arguments=*/ {},
-	                                                   /*return_type=*/LogicalType::LIST(LogicalType::VARCHAR),
-	                                                   ListRegisteredFileSystems);
-	loader.RegisterFunction(list_registered_filesystem_function);
+	loader.RegisterFunction(ListRegisteredFileSystemsQueryFunc());
 
 	// Register a function to wrap all duckdb-vfs-compatible filesystems. By default only httpfs filesystem instances
 	// are wrapped. Usage for the target filesystem can be used as normal.
