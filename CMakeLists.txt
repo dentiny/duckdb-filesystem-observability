@@ -23,6 +23,7 @@ include_directories(duckdb/third_party/httplib)
 set(EXTENSION_SOURCES
     src/fake_filesystem.cpp
     src/filesystem_ref_registry.cpp
+    src/filesystem_status_query_function.cpp
     src/histogram.cpp
     src/metrics_collector.cpp
     src/numeric_utils.cpp
