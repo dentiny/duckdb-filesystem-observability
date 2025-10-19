@@ -15,6 +15,10 @@ namespace {
 constexpr idx_t CACHE_LOAD_THRESHOLD = 64;
 constexpr idx_t SMALL_LOAD_CACHE_INTERVAL = 4;
 constexpr idx_t LARGE_LOAD_CACHE_INTERVAL = 32;
+
+// Global stats recorder.
+unique_ptr<ExternalFileCacheStatsRecorder> g_stats_recorder;
+
 } // namespace
 
 CacheAccessRecord ExternalFileCacheStatsRecorder::GetCacheAccessRecord() const {
@@ -95,11 +99,29 @@ void ExternalFileCacheStatsRecorder::UpdateCacheAccessRecordWithLock(const Cache
 }
 
 void ExternalFileCacheStatsRecorder::UpdateExternalFileCacheWithLock() {
-	auto cache_file_information = external_file_cache.GetCachedFileInformation();
+	auto cache_file_information = external_file_cache->GetCachedFileInformation();
 	std::sort(cache_file_information.begin(), cache_file_information.end(), [](const auto &lhs, const auto &rhs) {
 		return std::tie(lhs.path, lhs.location, lhs.nr_bytes, lhs.loaded) <
 		       std::tie(rhs.path, rhs.location, rhs.nr_bytes, rhs.loaded);
 	});
+}
+
+void ExternalFileCacheStatsRecorder::ResetExternalFileCache(ExternalFileCache &cache) {
+	std::lock_guard<std::mutex> lck(mu);
+	external_file_cache = &cache;
+}
+
+ExternalFileCacheStatsRecorder &GetExternalFileCacheStatsRecorder() {
+	D_ASSERT(g_stats_recorder != nullptr);
+	return *g_stats_recorder;
+}
+
+void InitOrResetExternalFileCache(ExternalFileCache &cache) {
+	if (g_stats_recorder == nullptr) {
+		g_stats_recorder = make_uniq<ExternalFileCacheStatsRecorder>(cache);
+	} else {
+		g_stats_recorder->ResetExternalFileCache(cache);
+	}
 }
 
 } // namespace duckdb

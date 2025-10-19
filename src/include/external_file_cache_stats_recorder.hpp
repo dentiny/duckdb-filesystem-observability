@@ -28,7 +28,7 @@ struct CacheAccessRecord {
 class ExternalFileCacheStatsRecorder {
 public:
 	explicit ExternalFileCacheStatsRecorder(ExternalFileCache &external_file_cache_p)
-	    : external_file_cache(external_file_cache_p) {
+	    : external_file_cache(&external_file_cache_p) {
 	}
 
 	// Record read operation in the stats recorder.
@@ -37,6 +37,10 @@ public:
 	// Get cache access records.
 	CacheAccessRecord GetCacheAccessRecord() const;
 
+	// Set external file cache, used to invoke at extension reload where database instance has changed.
+	// TODO(hjiang): Current approach only assumes single external file cache and only supports one dataabase instance.
+	void ResetExternalFileCache(ExternalFileCache &cache);
+
 private:
 	// Update cache access.
 	void UpdateCacheAccessRecordWithLock(const CachedFileInformation &cache_file_info);
@@ -44,7 +48,7 @@ private:
 	// Load cache information from external file cache.
 	void UpdateExternalFileCacheWithLock();
 
-	ExternalFileCache &external_file_cache;
+	ExternalFileCache *external_file_cache = nullptr;
 	// Currently cached blocks in external file cache.
 	vector<CachedFileInformation> cache_blocks;
 	// Used to decide whether stats recorder should load fresh cache information.
@@ -54,5 +58,11 @@ private:
 	CacheAccessRecord cache_access_record;
 	mutable std::mutex mu;
 };
+
+// Get global stats recorder.
+ExternalFileCacheStatsRecorder &GetExternalFileCacheStatsRecorder();
+
+// Initialize or set stats recorder.
+void InitOrResetExternalFileCache(ExternalFileCache &cache);
 
 } // namespace duckdb
