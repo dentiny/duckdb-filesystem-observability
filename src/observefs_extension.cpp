@@ -92,9 +92,6 @@ void ListRegisteredFileSystems(DataChunk &args, ExpressionState &state, Vector &
 	auto filesystems = vfs.ListSubSystems();
 	std::sort(filesystems.begin(), filesystems.end());
 
-	auto &external_file_cache = ExternalFileCache::Get(duckdb_instance);
-	InitOrResetExternalFileCache(external_file_cache);
-
 	// Set filesystem instances.
 	ListVector::Reserve(result, filesystems.size());
 	ListVector::SetListSize(result, filesystems.size());

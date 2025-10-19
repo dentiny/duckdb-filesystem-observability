@@ -2,6 +2,7 @@
 
 #include "duckdb/common/string_util.hpp"
 #include "duckdb/main/client_context.hpp"
+#include "external_file_cache_stats_recorder.hpp"
 
 namespace duckdb {
 
@@ -18,10 +19,12 @@ std::string ObservabilityFileSystem::GetHumanReadableStats() {
 }
 
 void ObservabilityFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) {
+	GetExternalFileCacheStatsRecorder().AccessRead(handle.GetPath(), location, nr_bytes);
 	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kRead, handle.GetPath(), nr_bytes);
 	internal_filesystem->Read(handle, buffer, nr_bytes, location);
 }
 int64_t ObservabilityFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_bytes) {
+	GetExternalFileCacheStatsRecorder().AccessRead(handle.GetPath(), handle.SeekPosition(), nr_bytes);
 	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kRead, handle.GetPath(), nr_bytes);
 	return internal_filesystem->Read(handle, buffer, nr_bytes);
 }

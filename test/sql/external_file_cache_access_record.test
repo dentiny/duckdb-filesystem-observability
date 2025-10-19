@@ -1,0 +1,21 @@
+# name: test/sql/external_file_cache_access_record.test
+# description: test observefs extension getting external file access records
+# group: [sql]
+
+require observefs
+
+# No results initially.
+query III
+SELECT * FROM observefs_external_file_cache_access_record();
+----
+0	0	0
+
+# Perform an IO operation and re-check cache stats;
+# inititially all cache miss.
+statement ok
+SELECT COUNT(*) FROM read_csv_auto('https://raw.githubusercontent.com/dentiny/duck-read-cache-fs/refs/heads/main/test/data/stock-exchanges.csv');
+
+query III
+SELECT * FROM observefs_external_file_cache_access_record();
+----
+0	1	0
