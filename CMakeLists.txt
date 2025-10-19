@@ -21,6 +21,7 @@ include_directories(duckdb-httpfs/src/include)
 include_directories(duckdb/third_party/httplib)
 
 set(EXTENSION_SOURCES
+    src/external_file_cache_stats_recorder.cpp
     src/fake_filesystem.cpp
     src/filesystem_ref_registry.cpp
     src/filesystem_status_query_function.cpp

@@ -5,6 +5,7 @@
 #include "duckdb/common/opener_file_system.hpp"
 #include "duckdb/common/string_util.hpp"
 #include "duckdb/common/unique_ptr.hpp"
+#include "duckdb/storage/external_file_cache.hpp"
 #include "fake_filesystem.hpp"
 #include "filesystem_ref_registry.hpp"
 #include "filesystem_status_query_function.hpp"
