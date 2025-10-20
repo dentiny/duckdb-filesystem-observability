@@ -114,6 +114,13 @@ void ExternalFileCacheStatsRecorder::UpdateExternalFileCacheWithLock() {
 	});
 }
 
+void ExternalFileCacheStatsRecorder::ClearCacheAccessRecord() {
+	std::lock_guard<std::mutex> lck(mu);
+	cache_access_record.hit_count = 0;
+	cache_access_record.miss_count = 0;
+	cache_access_record.partial_hit_count = 0;
+}
+
 void ExternalFileCacheStatsRecorder::ResetExternalFileCache(ExternalFileCache &cache) {
 	std::lock_guard<std::mutex> lck(mu);
 	external_file_cache = &cache;

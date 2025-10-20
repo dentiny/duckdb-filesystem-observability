@@ -22,6 +22,9 @@ namespace duckdb {
 
 namespace {
 
+// Indicates successful query.
+constexpr bool SUCCESS = true;
+
 // Get database instance from expression state.
 // Returned instance ownership lies in the given [`state`].
 DatabaseInstance &GetDatabaseInstance(ExpressionState &state) {
@@ -76,7 +79,6 @@ void WrapFileSystem(const DataChunk &args, ExpressionState &state, Vector &resul
 	ObservabilityFsRefRegistry::Get().Register(observe_filesystem.get());
 	vfs.RegisterSubSystem(std::move(observe_filesystem));
 
-	constexpr bool SUCCESS = true;
 	result.Reference(Value(SUCCESS));
 }
 
@@ -106,6 +108,11 @@ void ListRegisteredFileSystems(DataChunk &args, ExpressionState &state, Vector &
 
 	// Set result as valid.
 	FlatVector::SetValidity(result, ValidityMask(filesystems.size()));
+}
+
+void ClearExternalFileCacheStatsRecord(DataChunk &args, ExpressionState &state, Vector &result) {
+	GetExternalFileCacheStatsRecorder().ClearCacheAccessRecord();
+	result.Reference(Value(SUCCESS));
 }
 
 // Extract or get httpfs filesystem.
@@ -227,6 +234,13 @@ void LoadInternal(ExtensionLoader &loader) {
 	                                              /*arguments=*/ {LogicalTypeId::VARCHAR},
 	                                              /*return_type=*/LogicalTypeId::BOOLEAN, WrapFileSystem);
 	loader.RegisterFunction(wrap_cache_filesystem_function);
+
+	// Register a function to clear external file cache stats record.
+	ScalarFunction clear_external_file_cache_access_record_function("observefs_clear_external_file_cache_access_record",
+	                                                                /*arguments=*/ {},
+	                                                                /*return_type=*/LogicalTypeId::BOOLEAN,
+	                                                                ClearExternalFileCacheStatsRecord);
+	loader.RegisterFunction(clear_external_file_cache_access_record_function);
 
 	// Register external file cache access query function.
 	loader.RegisterFunction(ExternalFileCacheAccessQueryFunc());
