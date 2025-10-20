@@ -188,6 +188,19 @@ void LoadInternal(ExtensionLoader &loader) {
 	auto observability_s3_filesystem = make_uniq<ObservabilityFileSystem>(std::move(s3_fs));
 	ObservabilityFsRefRegistry::Get().Register(observability_s3_filesystem.get());
 	vfs.RegisterSubSystem(std::move(observability_s3_filesystem));
+	auto &config = DBConfig::GetConfig(duckdb_instance);
+
+	auto enable_external_file_cache_stats_callback = [](ClientContext &context, SetScope scope, Value &parameter) {
+		const auto to_enable = parameter.GetValue<bool>();
+		if (to_enable) {
+			GetExternalFileCacheStatsRecorder().Enable();
+		} else {
+			GetExternalFileCacheStatsRecorder().Disable();
+		}
+	};
+	config.AddExtensionOption("observefs_enable_external_file_cache_stats",
+	                          "Whether to enable stats record for external file cache.", LogicalType::BOOLEAN, true,
+	                          std::move(enable_external_file_cache_stats_callback));
 
 	// Register observability data cleanup function.
 	ScalarFunction clear_cache_function("observefs_clear", /*arguments=*/ {},

@@ -31,6 +31,10 @@ public:
 	    : external_file_cache(&external_file_cache_p) {
 	}
 
+	// Enable and disable stats record.
+	void Enable();
+	void Disable();
+
 	// Record read operation in the stats recorder.
 	void AccessRead(const string &filepath, idx_t start_offset, idx_t bytes_to_read);
 
@@ -56,6 +60,8 @@ private:
 	idx_t cur_load_iteration = 0;
 	// Cache access record.
 	CacheAccessRecord cache_access_record;
+	// Whether stats record is enabled.
+	bool enabled = true;
 	mutable std::mutex mu;
 };
 
