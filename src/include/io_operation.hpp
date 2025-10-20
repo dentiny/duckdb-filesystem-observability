@@ -1,3 +1,7 @@
+// Necessary changes to add a new IO operation:
+// 1. Add new IO operations to [`IoOperation`] enum class
+// 2. Add estimated latency to [`kLatencyHeuristics`]
+
 #pragma once
 
 #include <array>
@@ -12,12 +16,15 @@ enum class IoOperation {
 	kOpen = 0,
 	kRead = 1,
 	kList = 2,
-	kUnknown = 3,
+	kGlob = 3,
+	kGetFileSize = 4,
+	kUnknown = 5,
 };
 
 inline constexpr auto kIoOperationCount = static_cast<size_t>(IoOperation::kUnknown);
 
 // Operation names, indexed by operation enums.
-inline constexpr std::array<const char *, kIoOperationCount> OPER_NAMES = {"open", "read", "list"};
+inline constexpr std::array<const char *, kIoOperationCount> OPER_NAMES = {"open", "read", "list", "glob",
+                                                                           "get_file_size"};
 
 } // namespace duckdb
