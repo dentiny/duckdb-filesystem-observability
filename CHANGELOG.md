@@ -1,3 +1,22 @@
+# 0.4.0
+
+## Added
+
+- Add latency stats (histogram and quantile) to glob and getting file size IO operation ([#53])
+
+[#53]: https://github.com/dentiny/duckdb-filesystem-observability/pull/53
+
+- Record access for duckdb internal external file cache, and corresponding table function to query and emit status ([#50], [#52])
+
+[#50]: https://github.com/dentiny/duckdb-filesystem-observability/pull/50
+[#52]: https://github.com/dentiny/duckdb-filesystem-observability/pull/52
+
+## Fixed
+
+- Fixed missing stats report for multiple IO operations; previously only open operation is correctly reported ([#49])
+
+[#49]: https://github.com/dentiny/duckdb-filesystem-observability/pull/49
+
 # 0.3.2
 
 ## Changed
