@@ -6,7 +6,7 @@
 
 [#53]: https://github.com/dentiny/duckdb-filesystem-observability/pull/53
 
-- Record access for duckdb internal external file cache, and corresponding table function to query and emit status ([#50, #52])
+- Record access for duckdb internal external file cache, and corresponding table function to query and emit status ([#50], [#52])
 
 [#50]: https://github.com/dentiny/duckdb-filesystem-observability/pull/50
 [#52]: https://github.com/dentiny/duckdb-filesystem-observability/pull/52
