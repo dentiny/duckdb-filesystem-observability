@@ -1,3 +1,7 @@
+// Necessary changes to add a new IO operation:
+// 1. Add new IO operations to [`IoOperation`] enum class
+// 2. Add estimated latency to [`kLatencyHeuristics`]
+
 #pragma once
 
 #include <array>

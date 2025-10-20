@@ -31,6 +31,10 @@ inline constexpr std::array<LatencyHeuristic, static_cast<size_t>(IoOperation::k
     {0, 1000, 100},
     // kList
     {0, 3000, 100},
+    // kGlob
+    {0, 3000, 100},
+    // kGetFileSize,
+    {0, 1000, 100},
 }};
 
 // A RAII guard to measure latency for IO operations.
