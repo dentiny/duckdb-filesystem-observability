@@ -14,6 +14,20 @@
 
 namespace duckdb {
 
+// Forward declaration.
+class ObservabilityFileSystem;
+
+class ObservabilityFileSystemHandle : public FileHandle {
+public:
+	ObservabilityFileSystemHandle(unique_ptr<FileHandle> internal_file_handle_p, ObservabilityFileSystem &fs);
+	~ObservabilityFileSystemHandle() = default;
+
+	void Close() override {
+	}
+
+	unique_ptr<FileHandle> internal_file_handle;
+};
+
 class ObservabilityFileSystem : public FileSystem {
 public:
 	explicit ObservabilityFileSystem(unique_ptr<FileSystem> internal_filesystem_p)
@@ -57,22 +71,22 @@ public:
 	void RemoveFile(const string &filename, optional_ptr<FileOpener> opener = nullptr) override;
 	vector<OpenFileInfo> Glob(const string &path, FileOpener *opener = nullptr) override;
 	void Seek(FileHandle &handle, idx_t location) override;
+	void Reset(FileHandle &handle) override;
+	idx_t SeekPosition(FileHandle &handle) override;
+	FileType GetFileType(FileHandle &handle) override;
+	void FileSync(FileHandle &handle) override;
+	bool OnDiskFile(FileHandle &handle) override;
+	bool Trim(FileHandle &handle, idx_t offset_bytes, idx_t length_bytes) override;
+	bool IsManuallySet() override {
+		return true;
+	}
 
 	// =============================================
 	// Delegate into internal filesystem instance.
 	// =============================================
 	//
-	bool Trim(FileHandle &handle, idx_t offset_bytes, idx_t length_bytes) override {
-		return internal_filesystem->Trim(handle, offset_bytes, length_bytes);
-	}
-	FileType GetFileType(FileHandle &handle) override {
-		return internal_filesystem->GetFileType(handle);
-	}
 	bool IsPipe(const string &filename, optional_ptr<FileOpener> opener = nullptr) override {
 		return internal_filesystem->IsPipe(filename, opener);
-	}
-	void FileSync(FileHandle &handle) override {
-		internal_filesystem->FileSync(handle);
 	}
 	string GetHomeDirectory() override {
 		return internal_filesystem->GetHomeDirectory();
@@ -98,20 +112,8 @@ public:
 	bool CanHandleFile(const string &fpath) override {
 		return internal_filesystem->CanHandleFile(fpath);
 	}
-	void Reset(FileHandle &handle) override {
-		internal_filesystem->Reset(handle);
-	}
-	idx_t SeekPosition(FileHandle &handle) override {
-		return internal_filesystem->SeekPosition(handle);
-	}
-	bool IsManuallySet() override {
-		return internal_filesystem->IsManuallySet();
-	}
 	bool CanSeek() override {
 		return internal_filesystem->CanSeek();
-	}
-	bool OnDiskFile(FileHandle &handle) override {
-		return internal_filesystem->OnDiskFile(handle);
 	}
 	void SetDisabledFileSystems(const vector<string> &names) override {
 		internal_filesystem->SetDisabledFileSystems(names);
