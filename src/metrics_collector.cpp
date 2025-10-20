@@ -66,7 +66,7 @@ std::string MetricsCollector::GetHumanReadableStats() {
 	// Collect request size stats.
 	const auto size_stats = operation_size_collector_->GetHumanReadableStats();
 	if (!size_stats.empty()) {
-		human_readable_stats += StringUtil::Format("Request size: \n%s\n", size_stats);
+		human_readable_stats += StringUtil::Format("\nRequest size: %s\n", size_stats);
 	}
 
 	return human_readable_stats;
