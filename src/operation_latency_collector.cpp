@@ -56,7 +56,7 @@ std::string OperationLatencyCollector::GetHumanReadableStats() {
 		if (cur_histogram->counts() == 0) {
 			continue;
 		}
-		stats += StringUtil::Format("\n%s operation histogram is %s", OPER_NAMES[cur_oper_idx],
+		stats += StringUtil::Format("\n\n%s operation histogram is %s", OPER_NAMES[cur_oper_idx],
 		                            cur_histogram->FormatString());
 
 		// Check important quantiles.
