@@ -2,9 +2,13 @@
 
 #include "duckdb.hpp"
 #include "duckdb/common/exception.hpp"
+#include "duckdb/common/helper.hpp"
 #include "duckdb/common/opener_file_system.hpp"
 #include "duckdb/common/string_util.hpp"
 #include "duckdb/common/unique_ptr.hpp"
+#include "duckdb/storage/external_file_cache.hpp"
+#include "external_file_cache_query_function.hpp"
+#include "external_file_cache_stats_recorder.hpp"
 #include "fake_filesystem.hpp"
 #include "filesystem_ref_registry.hpp"
 #include "filesystem_status_query_function.hpp"
@@ -17,16 +21,18 @@
 
 namespace duckdb {
 
+namespace {
+
 // Get database instance from expression state.
 // Returned instance ownership lies in the given [`state`].
-static DatabaseInstance &GetDatabaseInstance(ExpressionState &state) {
+DatabaseInstance &GetDatabaseInstance(ExpressionState &state) {
 	auto *executor = state.root.executor;
 	auto &client_context = executor->GetContext();
 	return *client_context.db.get();
 }
 
 // Clear observability data for all filesystems.
-static void ClearObservabilityData(const DataChunk &args, ExpressionState &state, Vector &result) {
+void ClearObservabilityData(const DataChunk &args, ExpressionState &state, Vector &result) {
 	auto observefs_instances = ObservabilityFsRefRegistry::Get().GetAllObservabilityFs();
 	for (auto *cur_fs : observefs_instances) {
 		cur_fs->ClearObservabilityData();
@@ -36,7 +42,7 @@ static void ClearObservabilityData(const DataChunk &args, ExpressionState &state
 	result.Reference(Value(SUCCESS));
 }
 
-static void GetProfileStats(const DataChunk &args, ExpressionState &state, Vector &result) {
+void GetProfileStats(const DataChunk &args, ExpressionState &state, Vector &result) {
 	string latest_stat;
 	const auto &observefs_instances = ObservabilityFsRefRegistry::Get().GetAllObservabilityFs();
 	for (auto *cur_filesystem : observefs_instances) {
@@ -54,7 +60,7 @@ static void GetProfileStats(const DataChunk &args, ExpressionState &state, Vecto
 
 // Wrap the filesystem with extension cache filesystem.
 // Throw exception if the requested filesystem hasn't been registered into duckdb instance.
-static void WrapFileSystem(const DataChunk &args, ExpressionState &state, Vector &result) {
+void WrapFileSystem(const DataChunk &args, ExpressionState &state, Vector &result) {
 	D_ASSERT(args.ColumnCount() == 1);
 	const string filesystem_name = args.GetValue(/*col_idx=*/0, /*index=*/0).ToString();
 
@@ -76,7 +82,7 @@ static void WrapFileSystem(const DataChunk &args, ExpressionState &state, Vector
 }
 
 // List all registered function for the database instance.
-static void ListRegisteredFileSystems(DataChunk &args, ExpressionState &state, Vector &result) {
+void ListRegisteredFileSystems(DataChunk &args, ExpressionState &state, Vector &result) {
 	auto &result_entries = ListVector::GetEntry(result);
 
 	// duckdb instance has a opener filesystem, which is a wrapper around virtual filesystem.
@@ -104,7 +110,7 @@ static void ListRegisteredFileSystems(DataChunk &args, ExpressionState &state, V
 }
 
 // Extract or get httpfs filesystem.
-static unique_ptr<FileSystem> ExtractOrCreateHttpfs(FileSystem &vfs) {
+unique_ptr<FileSystem> ExtractOrCreateHttpfs(FileSystem &vfs) {
 	auto filesystems = vfs.ListSubSystems();
 	auto iter = std::find_if(filesystems.begin(), filesystems.end(), [](const auto &cur_fs_name) {
 		// Wrapped filesystem made by extensions could ends with httpfs filesystem.
@@ -119,7 +125,7 @@ static unique_ptr<FileSystem> ExtractOrCreateHttpfs(FileSystem &vfs) {
 }
 
 // Extract or get hugging filesystem.
-static unique_ptr<FileSystem> ExtractOrCreateHuggingfs(FileSystem &vfs) {
+unique_ptr<FileSystem> ExtractOrCreateHuggingfs(FileSystem &vfs) {
 	auto filesystems = vfs.ListSubSystems();
 	auto iter = std::find_if(filesystems.begin(), filesystems.end(), [](const auto &cur_fs_name) {
 		// Wrapped filesystem made by extensions could ends with httpfs filesystem.
@@ -134,7 +140,7 @@ static unique_ptr<FileSystem> ExtractOrCreateHuggingfs(FileSystem &vfs) {
 }
 
 // Extract or get s3 filesystem.
-static unique_ptr<FileSystem> ExtractOrCreateS3fs(FileSystem &vfs, DatabaseInstance &instance) {
+unique_ptr<FileSystem> ExtractOrCreateS3fs(FileSystem &vfs, DatabaseInstance &instance) {
 	auto filesystems = vfs.ListSubSystems();
 	auto iter = std::find_if(filesystems.begin(), filesystems.end(), [](const auto &cur_fs_name) {
 		// Wrapped filesystem made by extensions could ends with s3 filesystem.
@@ -148,13 +154,16 @@ static unique_ptr<FileSystem> ExtractOrCreateS3fs(FileSystem &vfs, DatabaseInsta
 	return s3_fs;
 }
 
-static void LoadInternal(ExtensionLoader &loader) {
+void LoadInternal(ExtensionLoader &loader) {
 	ObservabilityFsRefRegistry::Get().Reset();
 
 	// Register filesystem instance to instance.
 	auto &duckdb_instance = loader.GetDatabaseInstance();
 	auto &opener_filesystem = duckdb_instance.GetFileSystem().Cast<OpenerFileSystem>();
 	auto &vfs = opener_filesystem.GetFileSystem();
+
+	auto &external_file_cache = ExternalFileCache::Get(duckdb_instance);
+	InitOrResetExternalFileCache(external_file_cache);
 
 	// TODO(hjiang): Register a fake filesystem at extension load for testing purpose. This is not ideal since
 	// additional necessary instance is shipped in the extension. Local filesystem is not viable because it's not
@@ -210,7 +219,12 @@ static void LoadInternal(ExtensionLoader &loader) {
 	// Register TCP connection status function.
 	// WARNING: It works only on linux platform, it displays nothing on MacOs.
 	loader.RegisterFunction(GetTcpConnectionNumFunc());
+
+	// Register external file cache access query function.
+	loader.RegisterFunction(ExternalFileCacheAccessQueryFunc());
 }
+
+} // namespace
 
 void ObservefsExtension::Load(ExtensionLoader &loader) {
 	// To achieve full compatibility for duckdb-httpfs extension, all related functions/types/... should be supported,
