@@ -43,6 +43,7 @@ unique_ptr<FileHandle> ObservabilityFileSystem::OpenFile(const string &path, Fil
 	return make_uniq<ObservabilityFileSystemHandle>(std::move(file_handle), *this);
 }
 int64_t ObservabilityFileSystem::GetFileSize(FileHandle &handle) {
+	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kOpen, handle.GetPath());
 	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
 	return internal_filesystem->GetFileSize(*observability_file_handle.internal_file_handle);
 }
@@ -90,6 +91,7 @@ void ObservabilityFileSystem::RemoveFile(const string &filename, optional_ptr<Fi
 	internal_filesystem->RemoveFile(filename, opener);
 }
 vector<OpenFileInfo> ObservabilityFileSystem::Glob(const string &path, FileOpener *opener) {
+	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kGlob, path);
 	return internal_filesystem->Glob(path, opener);
 }
 void ObservabilityFileSystem::Seek(FileHandle &handle, idx_t location) {
