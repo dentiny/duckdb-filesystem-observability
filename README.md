@@ -30,10 +30,11 @@ SELECT observefs_wrap_filesystem('AzureBlobStorageFileSystem');
 ```
 
 The output includes comprehensive metrics:
-- Operation-specific latency histograms (READ, OPEN, LIST)
+- Operation-specific latency histograms (open, read, list, glob, get file size)
 - Quantile analysis (P50, P75, P90, P95, P99)
 - Per-bucket performance breakdown
 - Min/Max/Mean latency statistics
+- Duckdb external file cache access record
 
 ### Extension Integration
 
