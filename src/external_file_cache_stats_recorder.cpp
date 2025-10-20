@@ -4,9 +4,7 @@
 
 #include "duckdb/storage/external_file_cache.hpp"
 
-
 #include <iostream>
-
 
 namespace duckdb {
 
@@ -67,7 +65,7 @@ void ExternalFileCacheStatsRecorder::UpdateCacheAccessRecordWithLock(const Cache
 		                                    std::tie(rhs.path, rhs.location, rhs.nr_bytes, rhs.loaded);
 	                             });
 
-    std::cerr << "record access info" << std::endl;
+	std::cerr << "record access info" << std::endl;
 
 	if (iter == cache_blocks.end()) {
 		++cache_access_record.miss_count;

@@ -162,7 +162,7 @@ void LoadInternal(ExtensionLoader &loader) {
 	auto &opener_filesystem = duckdb_instance.GetFileSystem().Cast<OpenerFileSystem>();
 	auto &vfs = opener_filesystem.GetFileSystem();
 
-	auto& external_file_cache = ExternalFileCache::Get(duckdb_instance);
+	auto &external_file_cache = ExternalFileCache::Get(duckdb_instance);
 	InitOrResetExternalFileCache(external_file_cache);
 
 	// TODO(hjiang): Register a fake filesystem at extension load for testing purpose. This is not ideal since

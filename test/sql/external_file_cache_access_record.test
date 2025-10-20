@@ -18,4 +18,4 @@ SELECT COUNT(*) FROM read_csv_auto('https://raw.githubusercontent.com/dentiny/du
 query III
 SELECT * FROM observefs_external_file_cache_access_record();
 ----
-0	1	0
+0	2	0
