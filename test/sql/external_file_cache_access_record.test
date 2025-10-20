@@ -10,8 +10,19 @@ SELECT * FROM observefs_external_file_cache_access_record();
 ----
 0	0	0
 
-# Perform an IO operation and re-check cache stats;
-# inititially all cache miss.
+# Perform an IO operation and re-check cache stats; inititially all cache miss.
+statement ok
+SELECT COUNT(*) FROM read_csv_auto('https://raw.githubusercontent.com/dentiny/duck-read-cache-fs/refs/heads/main/test/data/stock-exchanges.csv');
+
+query III
+SELECT * FROM observefs_external_file_cache_access_record();
+----
+0	2	0
+
+# Disable the cache access record, so records won't get changed.
+statement ok
+SET observefs_enable_external_file_cache_stats=false;
+
 statement ok
 SELECT COUNT(*) FROM read_csv_auto('https://raw.githubusercontent.com/dentiny/duck-read-cache-fs/refs/heads/main/test/data/stock-exchanges.csv');
 

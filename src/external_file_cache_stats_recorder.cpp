@@ -26,9 +26,14 @@ CacheAccessRecord ExternalFileCacheStatsRecorder::GetCacheAccessRecord() const {
 	return cache_access_record;
 }
 
-// TODO(hjiang):
-// 1. Add option to disable record external file cache.
-// 2. Stop recording when external file cache disabled.
+void ExternalFileCacheStatsRecorder::Enable() {
+	std::lock_guard<std::mutex> lck(mu);
+	enabled = true;
+}
+void ExternalFileCacheStatsRecorder::Disable() {
+	std::lock_guard<std::mutex> lck(mu);
+	enabled = false;
+}
 void ExternalFileCacheStatsRecorder::AccessRead(const string &filepath, idx_t start_offset, idx_t bytes_to_read) {
 	CachedFileInformation cur_cache_file_info {
 	    .path = filepath,
@@ -38,6 +43,9 @@ void ExternalFileCacheStatsRecorder::AccessRead(const string &filepath, idx_t st
 	};
 
 	std::lock_guard<std::mutex> lck(mu);
+	if (!enabled || !external_file_cache->IsEnabled()) {
+		return;
+	}
 
 	// Check current access.
 	UpdateCacheAccessRecordWithLock(cur_cache_file_info);
