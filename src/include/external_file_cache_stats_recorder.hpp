@@ -41,6 +41,9 @@ public:
 	// Get cache access records.
 	CacheAccessRecord GetCacheAccessRecord() const;
 
+	// Clear cache access record.
+	void ClearCacheAccessRecord();
+
 	// Set external file cache, used to invoke at extension reload where database instance has changed.
 	// TODO(hjiang): Current approach only assumes single external file cache and only supports one dataabase instance.
 	void ResetExternalFileCache(ExternalFileCache &cache);

@@ -4,7 +4,10 @@
 
 require observefs
 
-# No results initially.
+# Clear and query initial cache access record.
+statement ok
+SELECT observefs_clear_external_file_cache_access_record();
+
 query III
 SELECT * FROM observefs_external_file_cache_access_record();
 ----
