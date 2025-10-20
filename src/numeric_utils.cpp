@@ -1,7 +1,6 @@
 #include "numeric_utils.hpp"
 
 #include <cmath>
-#include <iostream>
 
 namespace duckdb {
 

@@ -3,8 +3,6 @@
 #include "duckdb/common/string_util.hpp"
 #include "no_destructor.hpp"
 
-#include <iostream>
-
 namespace duckdb {
 
 namespace {
