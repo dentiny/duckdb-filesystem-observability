@@ -1,8 +1,9 @@
 #pragma once
 
 #include <cstddef>
-#include <string>
-#include <vector>
+
+#include "duckdb/common/string.hpp"
+#include "duckdb/common/vector.hpp"
 
 namespace duckdb {
 
@@ -22,7 +23,7 @@ public:
 	Histogram &operator=(Histogram &&) = delete;
 
 	// Set the distribution stats name and unit, used for formatting purpose.
-	void SetStatsDistribution(std::string name, std::string unit);
+	void SetStatsDistribution(string name, string unit);
 
 	// Add [val] into the histogram.
 	// Return whether [val] is valid.
@@ -53,7 +54,7 @@ public:
 	}
 
 	// Display histogram into string format.
-	std::string FormatString() const;
+	string FormatString() const;
 
 	// Reset histogram.
 	void Reset();
@@ -74,8 +75,8 @@ private:
 	// List of outliers.
 	std::vector<double> outliers_;
 	// Item name and unit for stats distribution.
-	std::string distribution_name_;
-	std::string distribution_unit_;
+	string distribution_name_;
+	string distribution_unit_;
 };
 
 } // namespace duckdb
