@@ -14,7 +14,7 @@ format-all: format
 test_unit: all
 	find build/release/extension/observefs/ -type f -name "test*" -not -name "*.o" -not -name "*.cpp" -not -name "*.d" -exec {} \;
 
-test_reldebug_unit: all
+test_reldebug_unit: reldebug
 	find build/reldebug/extension/observefs/ -type f -name "test*" -not -name "*.o" -not -name "*.cpp" -not -name "*.d" -exec {} \;
 
 test_debug_unit: debug
