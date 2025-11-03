@@ -205,19 +205,19 @@ void LoadInternal(ExtensionLoader &loader) {
 			GetExternalFileCacheStatsRecorder().Disable();
 		}
 	};
-	config.AddExtensionOption("observefs_enable_external_file_cache_stats",
-	                          "Whether to enable stats record for external file cache.", LogicalType::BOOLEAN, true,
-	                          std::move(enable_external_file_cache_stats_callback));
+	config.AddExtensionOption(
+	    "observefs_enable_external_file_cache_stats", "Whether to enable stats record for external file cache.",
+	    LogicalType {LogicalTypeId::BOOLEAN}, true, std::move(enable_external_file_cache_stats_callback));
 
 	// Register observability data cleanup function.
 	ScalarFunction clear_cache_function("observefs_clear", /*arguments=*/ {},
-	                                    /*return_type=*/LogicalType::BOOLEAN, ClearObservabilityData);
+	                                    /*return_type=*/LogicalType {LogicalTypeId::BOOLEAN}, ClearObservabilityData);
 	loader.RegisterFunction(clear_cache_function);
 
 	// Register profile collector metrics.
 	// A commonly-used SQL is `COPY (SELECT observefs_get_profile()) TO '/tmp/output.txt';`.
 	ScalarFunction get_profile_stats_function("observefs_get_profile", /*arguments=*/ {},
-	                                          /*return_type=*/LogicalType::VARCHAR, GetProfileStats);
+	                                          /*return_type=*/LogicalType {LogicalTypeId::VARCHAR}, GetProfileStats);
 	loader.RegisterFunction(get_profile_stats_function);
 
 	// Register a function to list all existing filesystem instances, which is useful for wrapping.

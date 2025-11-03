@@ -21,13 +21,13 @@ unique_ptr<FunctionData> ExternalFileCacheAccessBind(ClientContext &context, Tab
 	return_types.reserve(3);
 	names.reserve(3);
 
-	return_types.emplace_back(LogicalType::UBIGINT);
+	return_types.emplace_back(LogicalType {LogicalTypeId::UBIGINT});
 	names.emplace_back("cache hit count");
 
-	return_types.emplace_back(LogicalType::UBIGINT);
+	return_types.emplace_back(LogicalType {LogicalTypeId::UBIGINT});
 	names.emplace_back("cache miss count");
 
-	return_types.emplace_back(LogicalType::UBIGINT);
+	return_types.emplace_back(LogicalType {LogicalTypeId::UBIGINT});
 	names.emplace_back("cache partial hit");
 
 	return nullptr;
