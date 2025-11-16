@@ -24,18 +24,7 @@ struct LatencyHeuristic {
 	int num_buckets;
 };
 
-inline constexpr std::array<LatencyHeuristic, static_cast<size_t>(IoOperation::kUnknown)> kLatencyHeuristics = {{
-    // kOpen
-    {0, 1000, 100},
-    // kRead
-    {0, 1000, 100},
-    // kList
-    {0, 3000, 100},
-    // kGlob
-    {0, 3000, 100},
-    // kGetFileSize,
-    {0, 1000, 100},
-}};
+extern const std::array<LatencyHeuristic, kIoOperationCount> kLatencyHeuristics;
 
 // A RAII guard to measure latency for IO operations.
 class LatencyGuard {

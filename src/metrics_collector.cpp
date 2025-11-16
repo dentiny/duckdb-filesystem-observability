@@ -58,10 +58,19 @@ std::string MetricsCollector::GetHumanReadableStats() {
 		human_readable_stats += StringUtil::Format("Overall latency: \n%s\n", overall_latency_stats_str);
 	}
 
+#if defined(__APPLE__) || defined(__linux__)
 	for (const auto &[bucket, histogram] : bucket_latency_collector_) {
 		human_readable_stats += StringUtil::Format("  Bucket: %s\n", bucket);
 		human_readable_stats += StringUtil::Format("  Latency: %s\n", histogram->GetHumanReadableStats());
 	}
+#else
+	for (auto it = bucket_latency_collector_.begin(); it != bucket_latency_collector_.end(); ++it) {
+		const auto &bucket = it->first;
+		const auto &histogram = it->second;
+		human_readable_stats += StringUtil::Format("  Bucket: %s\n", bucket);
+		human_readable_stats += StringUtil::Format("  Latency: %s\n", histogram->GetHumanReadableStats());
+	}
+#endif
 
 	// Collect request size stats.
 	const auto size_stats = operation_size_collector_->GetHumanReadableStats();
