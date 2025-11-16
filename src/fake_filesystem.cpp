@@ -3,10 +3,21 @@
 #include "duckdb/common/string_util.hpp"
 #include "no_destructor.hpp"
 
+#include <filesystem>
+
 namespace duckdb {
 
 namespace {
-const NoDestructor<std::string> FAKE_FILESYSTEM_PREFIX {"/tmp/cache_httpfs_fake_filesystem"};
+std::string BuildFakeFilesystemPrefix() {
+	auto tmp = std::filesystem::temp_directory_path();
+	auto full = tmp / "cache_httpfs_fake_filesystem";
+	return full.string();
+}
+
+const std::string &GetFakeFilesystemPrefix() {
+	static const NoDestructor<std::string> kPrefix {BuildFakeFilesystemPrefix()};
+	return *kPrefix;
+}
 } // namespace
 
 ObserveHttpfsFakeFsHandle::ObserveHttpfsFakeFsHandle(string path, unique_ptr<FileHandle> internal_file_handle_p,
@@ -15,10 +26,10 @@ ObserveHttpfsFakeFsHandle::ObserveHttpfsFakeFsHandle(string path, unique_ptr<Fil
       internal_file_handle(std::move(internal_file_handle_p)) {
 }
 ObserveHttpfsFakeFileSystem::ObserveHttpfsFakeFileSystem() : local_filesystem(LocalFileSystem::CreateLocal()) {
-	local_filesystem->CreateDirectory(*FAKE_FILESYSTEM_PREFIX);
+	local_filesystem->CreateDirectory(GetFakeFilesystemPrefix());
 }
 bool ObserveHttpfsFakeFileSystem::CanHandleFile(const string &path) {
-	return StringUtil::StartsWith(path, *FAKE_FILESYSTEM_PREFIX);
+	return StringUtil::StartsWith(path, GetFakeFilesystemPrefix());
 }
 
 unique_ptr<FileHandle> ObserveHttpfsFakeFileSystem::OpenFile(const string &path, FileOpenFlags flags,
