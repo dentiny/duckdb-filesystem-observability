@@ -3,15 +3,23 @@
 #include "duckdb/common/string_util.hpp"
 #include "no_destructor.hpp"
 
-#include <filesystem>
-
 namespace duckdb {
 
 namespace {
 std::string BuildFakeFilesystemPrefix() {
-	auto tmp = std::filesystem::temp_directory_path();
-	auto full = tmp / "cache_httpfs_fake_filesystem";
-	return full.string();
+#ifdef _WIN32
+	const char *base = "C:\\\\Windows\\\\Temp";
+	const char sep = '\\';
+#else
+	const char *base = "/tmp";
+	const char sep = '/';
+#endif
+	std::string prefix = std::string(base);
+	if (!prefix.empty() && prefix.back() != sep) {
+		prefix.push_back(sep);
+	}
+	prefix += "cache_httpfs_fake_filesystem";
+	return prefix;
 }
 
 const std::string &GetFakeFilesystemPrefix() {
