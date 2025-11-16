@@ -35,11 +35,12 @@ void ExternalFileCacheStatsRecorder::Disable() {
 	enabled = false;
 }
 void ExternalFileCacheStatsRecorder::AccessRead(const string &filepath, idx_t start_offset, idx_t bytes_to_read) {
-	CachedFileInformation cur_cache_file_info;
-	cur_cache_file_info.path = filepath;
-	cur_cache_file_info.nr_bytes = bytes_to_read;
-	cur_cache_file_info.location = start_offset;
-	cur_cache_file_info.loaded = false; // Fill in "false" for binary search.
+	CachedFileInformation cur_cache_file_info {
+	    .path = filepath,
+	    .nr_bytes = bytes_to_read,
+	    .location = start_offset,
+	    .loaded = false, // Fill in "false" for binary search.
+	};
 
 	std::lock_guard<std::mutex> lck(mu);
 	if (!enabled || !external_file_cache->IsEnabled()) {
