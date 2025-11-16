@@ -24,7 +24,7 @@ struct LatencyHeuristic {
 	int num_buckets;
 };
 
-extern const std::array<LatencyHeuristic, kIoOperationCount> kLatencyHeuristics;
+extern const std::array<LatencyHeuristic, static_cast<size_t>(IoOperation::kUnknown)> kLatencyHeuristics;
 
 // A RAII guard to measure latency for IO operations.
 class LatencyGuard {

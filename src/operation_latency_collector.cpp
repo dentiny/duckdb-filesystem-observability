@@ -7,6 +7,7 @@
 namespace duckdb {
 
 // Define operation names visible project-wide without requiring separate build file changes.
+constexpr size_t kIoOperationCount = static_cast<size_t>(IoOperation::kUnknown);
 const std::array<const char *, kIoOperationCount> OPER_NAMES = {"open", "read", "list", "glob", "get_file_size"};
 
 namespace {
@@ -15,7 +16,7 @@ const NoDestructor<string> LATENCY_HISTOGRAM_UNIT {"millisec"};
 } // namespace
 
 // Define latency heuristics table (one per IoOperation except kUnknown).
-const std::array<LatencyHeuristic, kIoOperationCount> kLatencyHeuristics = {{
+const std::array<LatencyHeuristic, static_cast<size_t>(IoOperation::kUnknown)> kLatencyHeuristics = {{
     // kOpen
     {0, 1000, 100},
     // kRead
