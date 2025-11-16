@@ -9,6 +9,23 @@
 
 namespace duckdb {
 
+#ifdef _WIN32
+#define SYSCALL_THROW_IF_ERROR(ret)                                                                                    \
+	do {                                                                                                               \
+		if ((ret) < 0) {                                                                                               \
+			throw IOException("Failed to execute syscall");                                                            \
+		}                                                                                                              \
+	} while (0)
+
+#define SYSCALL_EXIT_IF_ERROR(ret)                                                                                     \
+	do {                                                                                                               \
+		if ((ret) < 0) {                                                                                               \
+			std::cerr << "Failed to execute syscall" << std::endl;                                                     \
+			std::exit(-1);                                                                                             \
+		}                                                                                                              \
+	} while (0)
+#else
+#include <cerrno>
 #define SYSCALL_THROW_IF_ERROR(ret)                                                                                    \
 	do {                                                                                                               \
 		if ((ret) < 0) {                                                                                               \
@@ -29,5 +46,6 @@ namespace duckdb {
 			std::exit(-1);                                                                                             \
 		}                                                                                                              \
 	} while (0)
+#endif
 
 } // namespace duckdb
