@@ -7,6 +7,7 @@ set(CMAKE_CXX_STANDARD 14)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++17-extensions")
 
+find_package(OpenSSL REQUIRED)
 find_package(CURL REQUIRED)
 
 set(EXTENSION_NAME ${TARGET_NAME}_extension)
@@ -49,8 +50,11 @@ set(EXTENSION_SOURCES
 build_static_extension(${TARGET_NAME} ${EXTENSION_SOURCES})
 build_loadable_extension(${TARGET_NAME} " " ${EXTENSION_SOURCES})
 
-target_link_libraries(${EXTENSION_NAME} CURL::libcurl)
-target_link_libraries(${LOADABLE_EXTENSION_NAME} CURL::libcurl)
+# Link OpenSSL in both the static library as the loadable extension
+target_link_libraries(${EXTENSION_NAME} OpenSSL::SSL OpenSSL::Crypto
+                      CURL::libcurl)
+target_link_libraries(${LOADABLE_EXTENSION_NAME} OpenSSL::SSL OpenSSL::Crypto
+                      CURL::libcurl)
 
 install(
   TARGETS ${EXTENSION_NAME}

@@ -59,7 +59,7 @@ void ExternalFileCacheStatsRecorder::AccessRead(const string &filepath, idx_t st
 		return;
 	}
 
-	if (cur_load_iteration ^ LARGE_LOAD_CACHE_INTERVAL == 0) {
+	if (cur_load_iteration % LARGE_LOAD_CACHE_INTERVAL == 0) {
 		UpdateExternalFileCacheWithLock();
 	}
 }
