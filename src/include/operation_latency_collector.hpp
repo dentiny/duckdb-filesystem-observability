@@ -46,7 +46,7 @@ public:
 	LatencyGuard(const LatencyGuard &) = delete;
 	LatencyGuard &operator=(const LatencyGuard &) = delete;
 	LatencyGuard(LatencyGuard &&) = default;
-	LatencyGuard &operator=(LatencyGuard &&) = default;
+	LatencyGuard &operator=(LatencyGuard &&) = delete;
 
 private:
 	OperationLatencyCollector &latency_collector;

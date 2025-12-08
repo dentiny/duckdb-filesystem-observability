@@ -5,10 +5,8 @@ set(TARGET_NAME observefs)
 
 set(CMAKE_CXX_STANDARD 14)
 
-# DuckDB's extension distribution supports vcpkg. As such, dependencies can be
-# added in ./vcpkg.json and then used in cmake with find_package. Feel free to
-# remove or replace with other dependencies. Note that it should also be removed
-# from vcpkg.json to prevent needlessly installing it..
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-c++17-extensions")
+
 find_package(OpenSSL REQUIRED)
 find_package(CURL REQUIRED)
 
