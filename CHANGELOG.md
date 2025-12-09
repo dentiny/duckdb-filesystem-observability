@@ -2,6 +2,12 @@
 
 ## Changed
 
+- Upgrade duckdb, httpfs and extension-ci-tools to v1.4.3
+
+# 0.4.1
+
+## Changed
+
 - Upgrade duckdb, httpfs and extension-ci-tools to v1.4.2 ([#60])
 
 [#60]: https://github.com/dentiny/duckdb-filesystem-observability/pull/60
