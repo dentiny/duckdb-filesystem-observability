@@ -1,7 +1,9 @@
-// CacheFsRefRegistry is a singleton registry which stores references for all cache filesystems.
-// The class is not thread-safe.
+// CacheFsRefRegistry is a registry which stores references for all cache filesystems.
+// The class is thread-safe.
 
 #pragma once
+
+#include <mutex>
 
 #include "duckdb/common/vector.hpp"
 
@@ -12,9 +14,6 @@ class ObservabilityFileSystem;
 
 class ObservabilityFsRefRegistry {
 public:
-	// Get the singleton instance for the registry.
-	static ObservabilityFsRefRegistry &Get();
-
 	// Register the cache filesystem to the registry.
 	void Register(ObservabilityFileSystem *fs);
 
@@ -22,11 +21,10 @@ public:
 	void Reset();
 
 	// Get all cache filesystems.
-	const vector<ObservabilityFileSystem *> &GetAllObservabilityFs() const;
+	vector<ObservabilityFileSystem *> GetAllObservabilityFs() const;
 
 private:
-	ObservabilityFsRefRegistry() = default;
-
+	mutable std::mutex mu;
 	// The ownership lies in db instance.
 	vector<ObservabilityFileSystem *> observability_filesystems;
 };

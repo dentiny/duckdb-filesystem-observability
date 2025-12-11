@@ -5,11 +5,6 @@
 
 namespace duckdb {
 
-/*static*/ ObservabilityFsRefRegistry &ObservabilityFsRefRegistry::Get() {
-	static auto *registry = new ObservabilityFsRefRegistry();
-	return *registry;
-}
-
 void ObservabilityFsRefRegistry::Register(ObservabilityFileSystem *fs) {
 	auto *internal_filesystem = fs->GetInternalFileSystem();
 
@@ -17,6 +12,8 @@ void ObservabilityFsRefRegistry::Register(ObservabilityFileSystem *fs) {
 	if (dynamic_cast<ObservabilityFileSystem *>(internal_filesystem) != nullptr) {
 		throw InvalidInputException("Cannot wrap an observabibility filesystem %s!", fs->GetName());
 	}
+
+	const std::lock_guard<std::mutex> lck(mu);
 
 	// Validate filesystem hasn't been registered before.
 	for (const auto &already_registered : observability_filesystems) {
@@ -31,10 +28,12 @@ void ObservabilityFsRefRegistry::Register(ObservabilityFileSystem *fs) {
 }
 
 void ObservabilityFsRefRegistry::Reset() {
+	const std::lock_guard<std::mutex> lck(mu);
 	observability_filesystems.clear();
 }
 
-const vector<ObservabilityFileSystem *> &ObservabilityFsRefRegistry::GetAllObservabilityFs() const {
+vector<ObservabilityFileSystem *> ObservabilityFsRefRegistry::GetAllObservabilityFs() const {
+	const std::lock_guard<std::mutex> lck(mu);
 	return observability_filesystems;
 }
 
