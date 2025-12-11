@@ -15,6 +15,7 @@
 #include "hffs.hpp"
 #include "httpfs_extension.hpp"
 #include "observefs_extension.hpp"
+#include "observefs_instance_state.hpp"
 #include "observability_filesystem.hpp"
 #include "s3fs.hpp"
 
@@ -35,7 +36,9 @@ DatabaseInstance &GetDatabaseInstance(ExpressionState &state) {
 
 // Clear observability data for all filesystems.
 void ClearObservabilityData(const DataChunk &args, ExpressionState &state, Vector &result) {
-	auto observefs_instances = ObservabilityFsRefRegistry::Get().GetAllObservabilityFs();
+	auto &duckdb_instance = GetDatabaseInstance(state);
+	auto &instance_state = GetInstanceStateOrThrow(duckdb_instance);
+	auto observefs_instances = instance_state.registry.GetAllObservabilityFs();
 	for (auto *cur_fs : observefs_instances) {
 		cur_fs->ClearObservabilityData();
 	}
@@ -46,7 +49,9 @@ void ClearObservabilityData(const DataChunk &args, ExpressionState &state, Vecto
 
 void GetProfileStats(const DataChunk &args, ExpressionState &state, Vector &result) {
 	string latest_stat;
-	const auto &observefs_instances = ObservabilityFsRefRegistry::Get().GetAllObservabilityFs();
+	auto &duckdb_instance = GetDatabaseInstance(state);
+	auto &instance_state = GetInstanceStateOrThrow(duckdb_instance);
+	const auto &observefs_instances = instance_state.registry.GetAllObservabilityFs();
 	for (auto *cur_filesystem : observefs_instances) {
 		latest_stat += StringUtil::Format("Current filesystem: %s\n", cur_filesystem->GetName());
 		const auto cur_stats_str = cur_filesystem->GetHumanReadableStats();
@@ -76,7 +81,8 @@ void WrapFileSystem(const DataChunk &args, ExpressionState &state, Vector &resul
 	}
 
 	auto observe_filesystem = make_uniq<ObservabilityFileSystem>(std::move(internal_filesystem));
-	ObservabilityFsRefRegistry::Get().Register(observe_filesystem.get());
+	auto &instance_state = GetInstanceStateOrThrow(duckdb_instance);
+	instance_state.registry.Register(observe_filesystem.get());
 	vfs.RegisterSubSystem(std::move(observe_filesystem));
 
 	result.Reference(Value(SUCCESS));
@@ -161,12 +167,13 @@ unique_ptr<FileSystem> ExtractOrCreateS3fs(FileSystem &vfs, DatabaseInstance &in
 }
 
 void LoadInternal(ExtensionLoader &loader) {
-	ObservabilityFsRefRegistry::Get().Reset();
-
 	// Register filesystem instance to instance.
 	auto &duckdb_instance = loader.GetDatabaseInstance();
 	auto &opener_filesystem = duckdb_instance.GetFileSystem().Cast<OpenerFileSystem>();
 	auto &vfs = opener_filesystem.GetFileSystem();
+
+	auto instance_state = make_shared_ptr<ObservefsInstanceState>();
+	SetInstanceState(duckdb_instance, instance_state);
 
 	auto &external_file_cache = ExternalFileCache::Get(duckdb_instance);
 	InitOrResetExternalFileCache(external_file_cache);
@@ -181,19 +188,19 @@ void LoadInternal(ExtensionLoader &loader) {
 	// Register http filesystem.
 	auto http_fs = ExtractOrCreateHttpfs(vfs);
 	auto observability_httpfs_filesystem = make_uniq<ObservabilityFileSystem>(std::move(http_fs));
-	ObservabilityFsRefRegistry::Get().Register(observability_httpfs_filesystem.get());
+	instance_state->registry.Register(observability_httpfs_filesystem.get());
 	vfs.RegisterSubSystem(std::move(observability_httpfs_filesystem));
 
 	// Register hugging filesystem.
 	auto hf_fs = ExtractOrCreateHuggingfs(vfs);
 	auto observability_hf_filesystem = make_uniq<ObservabilityFileSystem>(std::move(hf_fs));
-	ObservabilityFsRefRegistry::Get().Register(observability_hf_filesystem.get());
+	instance_state->registry.Register(observability_hf_filesystem.get());
 	vfs.RegisterSubSystem(std::move(observability_hf_filesystem));
 
 	// Register s3 filesystem.
 	auto s3_fs = ExtractOrCreateS3fs(vfs, duckdb_instance);
 	auto observability_s3_filesystem = make_uniq<ObservabilityFileSystem>(std::move(s3_fs));
-	ObservabilityFsRefRegistry::Get().Register(observability_s3_filesystem.get());
+	instance_state->registry.Register(observability_s3_filesystem.get());
 	vfs.RegisterSubSystem(std::move(observability_s3_filesystem));
 	auto &config = DBConfig::GetConfig(duckdb_instance);
 

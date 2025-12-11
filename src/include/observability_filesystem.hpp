@@ -51,7 +51,8 @@ public:
 	void Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) override;
 	// Does update file offset (which acts as `Read` semantics).
 	int64_t Read(FileHandle &handle, void *buffer, int64_t nr_bytes) override;
-	unique_ptr<FileHandle> OpenFile(const string &path, FileOpenFlags flags, optional_ptr<FileOpener> opener = nullptr) override;
+	unique_ptr<FileHandle> OpenFile(const string &path, FileOpenFlags flags,
+	                                optional_ptr<FileOpener> opener = nullptr) override;
 	std::string GetName() const override;
 	// Get file size.
 	int64_t GetFileSize(FileHandle &handle) override;
