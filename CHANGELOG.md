@@ -1,4 +1,12 @@
-# 0.4.1
+# 0.4.3
+
+## Changed
+
+- Switch from per-process extension state into per-instance, so users could have multiple extensions in single process. ([#66])
+
+[#66]: https://github.com/dentiny/duckdb-filesystem-observability/pull/66
+
+# 0.4.2
 
 ## Changed
 
