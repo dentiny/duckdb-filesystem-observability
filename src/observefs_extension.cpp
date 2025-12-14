@@ -43,7 +43,6 @@ void ClearObservabilityData(const DataChunk &args, ExpressionState &state, Vecto
 		cur_fs->ClearObservabilityData();
 	}
 
-	constexpr bool SUCCESS = true;
 	result.Reference(Value(SUCCESS));
 }
 
