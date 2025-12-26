@@ -40,7 +40,7 @@ private:
 	};
 
 	// P50, P75, P90, P95, P99
-	inline static constexpr size_t QUANTILE_COUNT = 5;
+	static constexpr size_t QUANTILE_COUNT = 5;
 	float q = 0;
 	int n = 0;
 	std::array<Marker, QUANTILE_COUNT> markers;

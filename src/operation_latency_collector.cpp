@@ -6,6 +6,19 @@
 
 namespace duckdb {
 
+const std::array<LatencyHeuristic, static_cast<size_t>(IoOperation::kUnknown)> kLatencyHeuristics = {{
+    // kOpen
+    {0, 1000, 100},
+    // kRead
+    {0, 1000, 100},
+    // kList
+    {0, 3000, 100},
+    // kGlob
+    {0, 3000, 100},
+    // kGetFileSize,
+    {0, 1000, 100},
+}};
+
 namespace {
 const NoDestructor<string> LATENCY_HISTOGRAM_ITEM {"latency"};
 const NoDestructor<string> LATENCY_HISTOGRAM_UNIT {"millisec"};
