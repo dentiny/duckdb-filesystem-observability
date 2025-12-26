@@ -58,9 +58,9 @@ void OperationLatencyCollector::RecordOperationEnd(IoOperation io_oper, int64_t 
 	cur_quantile_estimator->Add(static_cast<float>(latency_millisec));
 }
 
-std::string OperationLatencyCollector::GetHumanReadableStats() {
+string OperationLatencyCollector::GetHumanReadableStats() {
 	std::lock_guard<std::mutex> lck(latency_collector_mu);
-	std::string stats;
+	string stats;
 
 	// Record IO operation latency.
 	for (idx_t cur_oper_idx = 0; cur_oper_idx < kIoOperationCount; ++cur_oper_idx) {

@@ -4,6 +4,7 @@
 #include <mutex>
 
 #include "duckdb/common/helper.hpp"
+#include "duckdb/common/string.hpp"
 #include "histogram.hpp"
 #include "io_operation.hpp"
 
@@ -17,7 +18,7 @@ public:
 	void RecordOperationSize(IoOperation io_oper, int64_t request_size);
 
 	// Collect human-readable stats for operation size.
-	std::string GetHumanReadableStats();
+	string GetHumanReadableStats();
 
 private:
 	std::mutex mu;

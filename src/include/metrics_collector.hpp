@@ -43,7 +43,7 @@ public:
 
 	// Represent stats in human-readable format.
 	// If no stats collected, an empty string will be returned.
-	std::string GetHumanReadableStats();
+	string GetHumanReadableStats();
 
 	// Reset all recorded metrics.
 	void Reset();

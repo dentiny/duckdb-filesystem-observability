@@ -12,7 +12,7 @@ ObservabilityFileSystemHandle::ObservabilityFileSystemHandle(unique_ptr<FileHand
       internal_file_handle(std::move(internal_file_handle_p)) {
 }
 
-std::string ObservabilityFileSystem::GetName() const {
+string ObservabilityFileSystem::GetName() const {
 	const auto compount_name = StringUtil::Format("observability-%s", internal_filesystem->GetName());
 	return compount_name;
 }
@@ -20,7 +20,7 @@ std::string ObservabilityFileSystem::GetName() const {
 void ObservabilityFileSystem::ClearObservabilityData() {
 	metrics_collector.Reset();
 }
-std::string ObservabilityFileSystem::GetHumanReadableStats() {
+string ObservabilityFileSystem::GetHumanReadableStats() {
 	return metrics_collector.GetHumanReadableStats();
 }
 

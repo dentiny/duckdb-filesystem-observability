@@ -5,6 +5,7 @@
 
 #include "duckdb/common/assert.hpp"
 #include "duckdb/common/helper.hpp"
+#include "duckdb/common/string.hpp"
 #include "duckdb/common/string_util.hpp"
 
 namespace duckdb {
@@ -16,7 +17,7 @@ Histogram::Histogram(double min_val, double max_val, int num_bkt)
 	Reset();
 }
 
-void Histogram::SetStatsDistribution(std::string name, std::string unit) {
+void Histogram::SetStatsDistribution(string name, string unit) {
 	distribution_name_ = std::move(name);
 	distribution_unit_ = std::move(unit);
 }
@@ -60,8 +61,8 @@ double Histogram::mean() const {
 	return sum_ / total_counts_;
 }
 
-std::string Histogram::FormatString() const {
-	std::string res;
+string Histogram::FormatString() const {
+	string res;
 
 	// Format outliers.
 	if (!outliers_.empty()) {

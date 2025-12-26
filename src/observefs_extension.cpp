@@ -266,11 +266,11 @@ void ObservefsExtension::Load(ExtensionLoader &loader) {
 
 	LoadInternal(loader);
 }
-std::string ObservefsExtension::Name() {
+string ObservefsExtension::Name() {
 	return "observefs";
 }
 
-std::string ObservefsExtension::Version() const {
+string ObservefsExtension::Version() const {
 #ifdef EXT_VERSION_QUACK
 	return EXT_VERSION_QUACK;
 #else

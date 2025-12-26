@@ -6,6 +6,7 @@
 #include <mutex>
 
 #include "duckdb/common/helper.hpp"
+#include "duckdb/common/string.hpp"
 #include "duckdb/common/unordered_map.hpp"
 #include "duckdb/common/vector.hpp"
 #include "histogram.hpp"
@@ -52,7 +53,7 @@ public:
 
 	// Represent stats in human-readable format.
 	// Return empty string if no stats.
-	std::string GetHumanReadableStats();
+	string GetHumanReadableStats();
 
 private:
 	friend class LatencyGuard;

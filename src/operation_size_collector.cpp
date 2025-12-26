@@ -26,9 +26,9 @@ void OperationSizeCollector::RecordOperationSize(IoOperation io_oper, int64_t re
 	request_size_histograms[static_cast<idx_t>(io_oper)]->Add(request_size);
 }
 
-std::string OperationSizeCollector::GetHumanReadableStats() {
+string OperationSizeCollector::GetHumanReadableStats() {
 	std::lock_guard<std::mutex> lck(mu);
-	std::string stats;
+	string stats;
 
 	// Record IO operation size.
 	for (idx_t cur_oper_idx = 0; cur_oper_idx < kIoOperationCount; ++cur_oper_idx) {

@@ -1,12 +1,13 @@
 #include "fake_filesystem.hpp"
 
+#include "duckdb/common/string.hpp"
 #include "duckdb/common/string_util.hpp"
 #include "no_destructor.hpp"
 
 namespace duckdb {
 
 namespace {
-std::string BuildFakeFilesystemPrefix() {
+string BuildFakeFilesystemPrefix() {
 #ifdef _WIN32
 	const char *base = "C:\\\\Windows\\\\Temp";
 	const char sep = '\\';
@@ -14,7 +15,7 @@ std::string BuildFakeFilesystemPrefix() {
 	const char *base = "/tmp";
 	const char sep = '/';
 #endif
-	std::string prefix = std::string(base);
+	string prefix = string(base);
 	if (!prefix.empty() && prefix.back() != sep) {
 		prefix.push_back(sep);
 	}
@@ -22,8 +23,8 @@ std::string BuildFakeFilesystemPrefix() {
 	return prefix;
 }
 
-const std::string &GetFakeFilesystemPrefix() {
-	static const NoDestructor<std::string> kPrefix {BuildFakeFilesystemPrefix()};
+const string &GetFakeFilesystemPrefix() {
+	static const NoDestructor<string> kPrefix {BuildFakeFilesystemPrefix()};
 	return *kPrefix;
 }
 } // namespace

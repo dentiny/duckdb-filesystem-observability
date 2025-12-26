@@ -5,6 +5,7 @@
 #include "duckdb/common/file_system.hpp"
 #include "duckdb/common/open_file_info.hpp"
 #include "duckdb/common/shared_ptr.hpp"
+#include "duckdb/common/string.hpp"
 #include "duckdb/common/unique_ptr.hpp"
 #include "metrics_collector.hpp"
 
@@ -45,7 +46,7 @@ public:
 	void ClearObservabilityData();
 	// Get human-readable metrics stats.
 	// If no stats collected, which means no interested IO operations for current filesystem.
-	std::string GetHumanReadableStats();
+	string GetHumanReadableStats();
 
 	// Doesn't update file offset (which acts as `PRead` semantics).
 	void Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) override;
@@ -53,7 +54,7 @@ public:
 	int64_t Read(FileHandle &handle, void *buffer, int64_t nr_bytes) override;
 	unique_ptr<FileHandle> OpenFile(const string &path, FileOpenFlags flags,
 	                                optional_ptr<FileOpener> opener = nullptr) override;
-	std::string GetName() const override;
+	string GetName() const override;
 	// Get file size.
 	int64_t GetFileSize(FileHandle &handle) override;
 	// Get last modification timestamp.

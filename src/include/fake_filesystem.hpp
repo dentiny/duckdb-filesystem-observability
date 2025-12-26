@@ -4,6 +4,7 @@
 
 #include "duckdb/common/file_system.hpp"
 #include "duckdb/common/local_file_system.hpp"
+#include "duckdb/common/string.hpp"
 
 namespace duckdb {
 
@@ -27,7 +28,7 @@ class ObserveHttpfsFakeFileSystem : public LocalFileSystem {
 public:
 	ObserveHttpfsFakeFileSystem();
 	bool CanHandleFile(const string &path) override;
-	std::string GetName() const override {
+	string GetName() const override {
 		return "observefs_fake_filesystem";
 	}
 
