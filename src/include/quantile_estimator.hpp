@@ -39,7 +39,7 @@ private:
 	string quantile_unit;
 
 	// Used to trigger large-scale data point ingestion.
-	inline static constexpr size_t LARGE_SCALE_DATA_POINT_THRESHOLD = 512;
+	static constexpr size_t LARGE_SCALE_DATA_POINT_THRESHOLD = 512;
 	mutable std::mutex mu;
 	// Used for small scale data points, where P² algorithm doesn't work well and memory footprint is acceptable.
 	QuantileLite quantile_lite;

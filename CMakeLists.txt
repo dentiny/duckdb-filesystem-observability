@@ -27,6 +27,7 @@ set(EXTENSION_SOURCES
     src/filesystem_ref_registry.cpp
     src/filesystem_status_query_function.cpp
     src/histogram.cpp
+    src/io_operation.cpp
     src/metrics_collector.cpp
     src/numeric_utils.cpp
     src/observability_filesystem.cpp
