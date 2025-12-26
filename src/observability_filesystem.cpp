@@ -1,6 +1,7 @@
 #include "observability_filesystem.hpp"
 
 #include "duckdb/common/string_util.hpp"
+#include "duckdb/main/client_context.hpp"
 #include "external_file_cache_stats_recorder.hpp"
 
 namespace duckdb {
