@@ -53,11 +53,11 @@ private:
 
 	// Overall latency histogram.
 	std::mutex mu;
-	unique_ptr<OperationLatencyCollector> overall_latency_collector_;
+	unique_ptr<OperationLatencyCollector> overall_latency_collector;
 	// Bucket-wise latency histogram.
-	unordered_map<string, unique_ptr<OperationLatencyCollector>> bucket_latency_collector_;
+	unordered_map<string, unique_ptr<OperationLatencyCollector>> bucket_latency_collector;
 	// Operation size collector.
-	unique_ptr<OperationSizeCollector> operation_size_collector_;
+	unique_ptr<OperationSizeCollector> operation_size_collector;
 };
 
 } // namespace duckdb

@@ -13,8 +13,8 @@ void LatencyGuardWrapper::TakeGuard(LatencyGuard latency_guard) {
 }
 
 MetricsCollector::MetricsCollector()
-    : overall_latency_collector_(make_uniq<OperationLatencyCollector>()),
-      operation_size_collector_(make_uniq<OperationSizeCollector>()) {
+    : overall_latency_collector(make_uniq<OperationLatencyCollector>()),
+      operation_size_collector(make_uniq<OperationSizeCollector>()) {
 }
 
 LatencyGuardWrapper MetricsCollector::RecordOperationStart(IoOperation io_oper, const string &filepath) {
@@ -25,7 +25,7 @@ LatencyGuardWrapper MetricsCollector::RecordOperationStart(IoOperation io_oper, 
 LatencyGuardWrapper MetricsCollector::RecordOperationStart(IoOperation io_oper, const string &filepath,
                                                            int64_t bytes_to_read) {
 	std::lock_guard<std::mutex> lck(mu);
-	operation_size_collector_->RecordOperationSize(io_oper, bytes_to_read);
+	operation_size_collector->RecordOperationSize(io_oper, bytes_to_read);
 	return RecordOperationStartWithLock(std::move(io_oper), filepath);
 }
 
@@ -33,11 +33,11 @@ LatencyGuardWrapper MetricsCollector::RecordOperationStartWithLock(IoOperation i
 	const auto bucket = GetObjectStorageBucket(filepath);
 
 	LatencyGuardWrapper guard_wrapper {};
-	auto overall_latency_guard = overall_latency_collector_->RecordOperationStart(io_oper);
+	auto overall_latency_guard = overall_latency_collector->RecordOperationStart(io_oper);
 	guard_wrapper.TakeGuard(std::move(overall_latency_guard));
 
 	if (!bucket.empty()) {
-		auto &cur_bucket_hist = bucket_latency_collector_[bucket];
+		auto &cur_bucket_hist = bucket_latency_collector[bucket];
 		if (cur_bucket_hist == nullptr) {
 			cur_bucket_hist = make_uniq<OperationLatencyCollector>();
 		}
@@ -54,18 +54,19 @@ string MetricsCollector::GetHumanReadableStats() {
 	string human_readable_stats;
 
 	// Collect latency stats.
-	const string overall_latency_stats_str = overall_latency_collector_->GetHumanReadableStats();
+	const string overall_latency_stats_str = overall_latency_collector->GetHumanReadableStats();
 	if (!overall_latency_stats_str.empty()) {
 		human_readable_stats += StringUtil::Format("Overall latency: \n%s\n", overall_latency_stats_str);
 	}
 
-	for (const auto &[bucket, histogram] : bucket_latency_collector_) {
-		human_readable_stats += StringUtil::Format("  Bucket: %s\n", bucket);
-		human_readable_stats += StringUtil::Format("  Latency: %s\n", histogram->GetHumanReadableStats());
+	for (const auto &bucket_and_histogram : bucket_latency_collector) {
+		human_readable_stats += StringUtil::Format("  Bucket: %s\n", bucket_and_histogram.first);
+		human_readable_stats +=
+		    StringUtil::Format("  Latency: %s\n", bucket_and_histogram.second->GetHumanReadableStats());
 	}
 
 	// Collect request size stats.
-	const auto size_stats = operation_size_collector_->GetHumanReadableStats();
+	const auto size_stats = operation_size_collector->GetHumanReadableStats();
 	if (!size_stats.empty()) {
 		human_readable_stats += StringUtil::Format("\nRequest size: %s\n", size_stats);
 	}
@@ -75,8 +76,8 @@ string MetricsCollector::GetHumanReadableStats() {
 
 void MetricsCollector::Reset() {
 	std::lock_guard<std::mutex> lck(mu);
-	overall_latency_collector_ = make_uniq<OperationLatencyCollector>();
-	bucket_latency_collector_.clear();
+	overall_latency_collector = make_uniq<OperationLatencyCollector>();
+	bucket_latency_collector.clear();
 }
 
 } // namespace duckdb
