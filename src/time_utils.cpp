@@ -1,20 +1,32 @@
-#include "duckdb/common/types/timestamp.hpp"
 #include "time_utils.hpp"
+
+#include <chrono>
+
+namespace {
+constexpr uint64_t kMicrosToNanos = 1000ULL;
+constexpr uint64_t kSecondsToMicros = 1000ULL * 1000ULL;
+constexpr uint64_t kSecondsToNanos = 1000ULL * 1000ULL * 1000ULL;
+constexpr uint64_t kMilliToNanos = 1000ULL * 1000ULL;
+} // namespace
 
 namespace duckdb {
 
-time_t DuckdbTimestampToTimeT(timestamp_t timestamp) {
-	auto components = Timestamp::GetComponents(timestamp);
-	struct tm tm {};
-	tm.tm_year = components.year - 1900;
-	tm.tm_mon = components.month - 1;
-	tm.tm_mday = components.day;
-	tm.tm_hour = components.hour;
-	tm.tm_min = components.minute;
-	tm.tm_sec = components.second;
-	tm.tm_isdst = 0;
-	time_t result = mktime(&tm);
-	return result;
+int64_t GetSteadyNowNanoSecSinceEpoch() {
+	return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::steady_clock::now().time_since_epoch())
+	    .count();
+}
+
+int64_t GetSteadyNowMilliSecSinceEpoch() {
+	return GetSteadyNowNanoSecSinceEpoch() / kMilliToNanos;
+}
+
+int64_t GetSystemNowNanoSecSinceEpoch() {
+	return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch())
+	    .count();
+}
+
+int64_t GetSystemNowMilliSecSinceEpoch() {
+	return GetSystemNowNanoSecSinceEpoch() / kMilliToNanos;
 }
 
 } // namespace duckdb
