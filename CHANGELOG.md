@@ -1,3 +1,9 @@
+# 0.4.4
+
+## Added
+
+- Add windows support by removing C++17/20 specific features (i.e., structural binding, `inline constexpr`, etc)
+
 # 0.4.3
 
 ## Changed
