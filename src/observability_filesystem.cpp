@@ -90,6 +90,7 @@ bool ObservabilityFileSystem::FileExists(const string &filename, optional_ptr<Fi
 	return internal_filesystem->FileExists(filename, opener);
 }
 void ObservabilityFileSystem::RemoveFile(const string &filename, optional_ptr<FileOpener> opener) {
+	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kRemoveFile, filename);
 	internal_filesystem->RemoveFile(filename, opener);
 }
 vector<OpenFileInfo> ObservabilityFileSystem::Glob(const string &path, FileOpener *opener) {
@@ -109,6 +110,7 @@ idx_t ObservabilityFileSystem::SeekPosition(FileHandle &handle) {
 	return internal_filesystem->SeekPosition(*observability_file_handle.internal_file_handle);
 }
 void ObservabilityFileSystem::FileSync(FileHandle &handle) {
+	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kFileSync, handle.GetPath());
 	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
 	internal_filesystem->FileSync(*observability_file_handle.internal_file_handle);
 }
