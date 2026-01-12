@@ -6,7 +6,9 @@ set(TARGET_NAME observefs)
 set(CMAKE_CXX_STANDARD 14)
 
 if(UNIX OR APPLE)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-write-strings -Wno-c++17-extensions -Wno-c++20-extensions")
+  set(CMAKE_CXX_FLAGS
+      "${CMAKE_CXX_FLAGS} -Wno-write-strings -Wno-c++17-extensions -Wno-c++20-extensions"
+  )
 endif()
 
 find_package(OpenSSL REQUIRED)
