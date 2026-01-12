@@ -1,3 +1,12 @@
+# 0.4.5
+
+## Added
+
+- Record latency for write, sync and file removal operations ([#73], [#74])
+
+[#73]: https://github.com/dentiny/duckdb-filesystem-observability/pull/73
+[#74]: https://github.com/dentiny/duckdb-filesystem-observability/pull/74
+
 # 0.4.4
 
 ## Added
