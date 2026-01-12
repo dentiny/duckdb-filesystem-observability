@@ -16,10 +16,11 @@ namespace duckdb {
 enum class IoOperation {
 	kOpen = 0,
 	kRead = 1,
-	kList = 2,
-	kGlob = 3,
-	kGetFileSize = 4,
-	kUnknown = 5,
+	kWrite = 2,
+	kList = 3,
+	kGlob = 4,
+	kGetFileSize = 5,
+	kUnknown = 6,
 };
 
 constexpr size_t kIoOperationCount = static_cast<size_t>(IoOperation::kUnknown);

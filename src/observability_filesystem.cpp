@@ -56,10 +56,12 @@ unique_ptr<FileHandle> ObservabilityFileSystem::OpenCompressedFile(QueryContext 
 	return internal_filesystem->OpenCompressedFile(std::move(context), std::move(handle), write);
 }
 void ObservabilityFileSystem::Write(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) {
+	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kWrite, handle.GetPath(), nr_bytes);
 	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
 	internal_filesystem->Write(*observability_file_handle.internal_file_handle, buffer, nr_bytes, location);
 }
 int64_t ObservabilityFileSystem::Write(FileHandle &handle, void *buffer, int64_t nr_bytes) {
+	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kWrite, handle.GetPath(), nr_bytes);
 	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
 	return internal_filesystem->Write(*observability_file_handle.internal_file_handle, buffer, nr_bytes);
 }
