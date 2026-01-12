@@ -20,7 +20,9 @@ enum class IoOperation {
 	kList = 3,
 	kGlob = 4,
 	kGetFileSize = 5,
-	kUnknown = 6,
+	kFileSync = 6,
+	kRemoveFile = 7,
+	kUnknown = 8,
 };
 
 constexpr size_t kIoOperationCount = static_cast<size_t>(IoOperation::kUnknown);
