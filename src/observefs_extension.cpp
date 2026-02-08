@@ -87,34 +87,6 @@ void WrapFileSystem(const DataChunk &args, ExpressionState &state, Vector &resul
 	result.Reference(Value(SUCCESS));
 }
 
-// List all registered function for the database instance.
-void ListRegisteredFileSystems(DataChunk &args, ExpressionState &state, Vector &result) {
-	auto &result_entries = ListVector::GetEntry(result);
-
-	// duckdb instance has a opener filesystem, which is a wrapper around virtual filesystem.
-	auto &duckdb_instance = GetDatabaseInstance(state);
-	auto &opener_filesystem = duckdb_instance.GetFileSystem().Cast<OpenerFileSystem>();
-	auto &vfs = opener_filesystem.GetFileSystem();
-	auto filesystems = vfs.ListSubSystems();
-	std::sort(filesystems.begin(), filesystems.end());
-
-	// Set filesystem instances.
-	ListVector::Reserve(result, filesystems.size());
-	ListVector::SetListSize(result, filesystems.size());
-	auto data = FlatVector::GetData<string_t>(result_entries);
-	for (int idx = 0; idx < filesystems.size(); ++idx) {
-		data[idx] = StringVector::AddString(result_entries, std::move(filesystems[idx]));
-	}
-
-	// Define the list element (offset + length)
-	auto list_data = FlatVector::GetData<list_entry_t>(result);
-	list_data[0].offset = 0;
-	list_data[0].length = filesystems.size();
-
-	// Set result as valid.
-	FlatVector::SetValidity(result, ValidityMask(filesystems.size()));
-}
-
 void ClearExternalFileCacheStatsRecord(DataChunk &args, ExpressionState &state, Vector &result) {
 	GetExternalFileCacheStatsRecorder().ClearCacheAccessRecord();
 	result.Reference(Value(SUCCESS));
