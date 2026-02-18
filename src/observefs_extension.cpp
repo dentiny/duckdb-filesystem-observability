@@ -23,6 +23,8 @@ namespace duckdb {
 
 namespace {
 
+// "httpfs" extension name.
+constexpr const char *HTTPFS_EXTENSION = "httpfs";
 // Indicates successful query.
 constexpr bool SUCCESS = true;
 
@@ -137,11 +139,40 @@ unique_ptr<FileSystem> ExtractOrCreateS3fs(FileSystem &vfs, DatabaseInstance &in
 	return s3_fs;
 }
 
+// Whether `httpfs` extension has already been loaded.
+bool IsHttpfsExtensionLoaded(DatabaseInstance &db_instance) {
+	auto &extension_manager = db_instance.GetExtensionManager();
+	const auto loaded_extensions = extension_manager.GetExtensions();
+	return std::find(loaded_extensions.begin(), loaded_extensions.end(), HTTPFS_EXTENSION) != loaded_extensions.end();
+}
+
+// Ensure httpfs extension is loaded, loading it if necessary
+void EnsureHttpfsExtensionLoaded(ExtensionLoader &loader, DatabaseInstance &instance) {
+	const bool httpfs_extension_loaded = IsHttpfsExtensionLoaded(instance);
+	if (httpfs_extension_loaded) {
+		return;
+	}
+	auto httpfs_extension = make_uniq<HttpfsExtension>();
+	httpfs_extension->Load(loader);
+
+	// Register into extension manager to keep compatibility as httpfs.
+	auto &extension_manager = ExtensionManager::Get(instance);
+	auto extension_active_load = extension_manager.BeginLoad(HTTPFS_EXTENSION);
+	// Manually fill in the extension install info to finalize extension load.
+	ExtensionInstallInfo extension_install_info;
+	extension_install_info.mode = ExtensionInstallMode::UNKNOWN;
+	extension_active_load->FinishLoad(extension_install_info);
+}
+
 void LoadInternal(ExtensionLoader &loader) {
 	// Register filesystem instance to instance.
 	auto &duckdb_instance = loader.GetDatabaseInstance();
 	auto &opener_filesystem = duckdb_instance.GetFileSystem().Cast<OpenerFileSystem>();
 	auto &vfs = opener_filesystem.GetFileSystem();
+
+	// To achieve full compatibility for duckdb-httpfs extension, all related functions/types/... should be supported,
+	// so we load it first if not already loaded.
+	EnsureHttpfsExtensionLoaded(loader, duckdb_instance);
 
 	auto instance_state = make_shared_ptr<ObservefsInstanceState>();
 	SetInstanceState(duckdb_instance, instance_state);
@@ -227,15 +258,6 @@ void LoadInternal(ExtensionLoader &loader) {
 } // namespace
 
 void ObservefsExtension::Load(ExtensionLoader &loader) {
-	// To achieve full compatibility for duckdb-httpfs extension, all related functions/types/... should be supported,
-	// so we load it first.
-	httpfs_extension = make_uniq<HttpfsExtension>();
-	// It's possible httpfs is already loaded beforehand, simply capture exception and proceed.
-	try {
-		httpfs_extension->Load(loader);
-	} catch (...) {
-	}
-
 	LoadInternal(loader);
 }
 string ObservefsExtension::Name() {

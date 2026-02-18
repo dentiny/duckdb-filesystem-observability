@@ -40,6 +40,9 @@ unique_ptr<FileHandle> ObservabilityFileSystem::OpenFile(const string &path, Fil
                                                          optional_ptr<FileOpener> opener) {
 	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kOpen, path);
 	auto file_handle = internal_filesystem->OpenFile(path, flags, opener);
+	if (!file_handle) {
+		return nullptr;
+	}
 	return make_uniq<ObservabilityFileSystemHandle>(std::move(file_handle), *this);
 }
 int64_t ObservabilityFileSystem::GetFileSize(FileHandle &handle) {
