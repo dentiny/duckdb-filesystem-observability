@@ -50,7 +50,8 @@ public:
 		return internal_filesystem.get();
 	}
 
-	// Clear observability data for all connections.
+	// Clear observability data. Per-connection clearing is done via observefs_clear() which resets the current
+	// connection's metrics in the instance state; this method is kept for API compatibility.
 	void ClearObservabilityData();
 	// Get human-readable metrics stats for a specific connection.
 	// If conn_id is invalid (DConstants::INVALID_INDEX), returns stats for all connections.

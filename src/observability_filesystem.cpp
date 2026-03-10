@@ -54,16 +54,11 @@ string ObservabilityFileSystem::GetHumanReadableStats(connection_t conn_id) {
 		throw InternalException("ObservabilityFileSystem: instance state is no longer valid");
 	}
 
-	if (conn_id != DConstants::INVALID_INDEX) {
-		// Get stats for specific connection
-		auto *collector = state->metrics_collector_manager.GetMetricsCollector(conn_id);
-		if (collector) {
-			return collector->GetHumanReadableStats();
-		}
+	auto *collector = state->metrics_collector_manager.GetMetricsCollector(conn_id);
+	if (collector) {
+		return collector->GetHumanReadableStats();
 	}
-
-	// Get stats for all connections (not directly supported in current implementation)
-	// For now, return empty string
+	// No metrics collected for this connection.
 	return "";
 }
 

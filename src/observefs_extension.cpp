@@ -38,15 +38,16 @@ DatabaseInstance &GetDatabaseInstance(ExpressionState &state) {
 	return *client_context.db.get();
 }
 
-// Clear observability data for all filesystems.
+// Clear observability data for the current connection.
 void ClearObservabilityData(const DataChunk &args, ExpressionState &state, Vector &result) {
 	auto &duckdb_instance = GetDatabaseInstance(state);
 	auto &instance_state = GetInstanceStateOrThrow(duckdb_instance);
-	auto observefs_instances = instance_state.registry.GetAllObservabilityFs();
-	for (auto *cur_fs : observefs_instances) {
-		cur_fs->ClearObservabilityData();
-	}
 
+	auto *executor = state.root.executor;
+	auto &client_context = executor->GetContext();
+	auto conn_id = client_context.GetConnectionId();
+
+	instance_state.metrics_collector_manager.ResetMetricsCollector(conn_id);
 	result.Reference(Value(SUCCESS));
 }
 
