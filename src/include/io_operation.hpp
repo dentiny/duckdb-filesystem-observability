@@ -19,7 +19,7 @@ enum class IoOperation {
 	kWrite = 2,
 	kList = 3,
 	kGlob = 4,
-	kGetFileSize = 5,
+	kStats = 5,
 	kFileSync = 6,
 	kRemoveFile = 7,
 	kUnknown = 8,

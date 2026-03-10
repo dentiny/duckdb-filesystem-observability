@@ -45,14 +45,29 @@ unique_ptr<FileHandle> ObservabilityFileSystem::OpenFile(const string &path, Fil
 	}
 	return make_uniq<ObservabilityFileSystemHandle>(std::move(file_handle), *this);
 }
+FileMetadata ObservabilityFileSystem::Stats(FileHandle &handle) {
+	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kStats, handle.GetPath());
+	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
+	return internal_filesystem->Stats(*observability_file_handle.internal_file_handle);
+}
 int64_t ObservabilityFileSystem::GetFileSize(FileHandle &handle) {
-	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kGetFileSize, handle.GetPath());
+	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kStats, handle.GetPath());
 	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
 	return internal_filesystem->GetFileSize(*observability_file_handle.internal_file_handle);
 }
 timestamp_t ObservabilityFileSystem::GetLastModifiedTime(FileHandle &handle) {
+	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kStats, handle.GetPath());
 	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
 	return internal_filesystem->GetLastModifiedTime(*observability_file_handle.internal_file_handle);
+}
+bool ObservabilityFileSystem::FileExists(const string &filename, optional_ptr<FileOpener> opener) {
+	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kStats, filename);
+	return internal_filesystem->FileExists(filename, opener);
+}
+FileType ObservabilityFileSystem::GetFileType(FileHandle &handle) {
+	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kStats, handle.GetPath());
+	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
+	return internal_filesystem->GetFileType(*observability_file_handle.internal_file_handle);
 }
 unique_ptr<FileHandle> ObservabilityFileSystem::OpenCompressedFile(QueryContext context, unique_ptr<FileHandle> handle,
                                                                    bool write) {
@@ -67,6 +82,11 @@ int64_t ObservabilityFileSystem::Write(FileHandle &handle, void *buffer, int64_t
 	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kWrite, handle.GetPath(), nr_bytes);
 	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
 	return internal_filesystem->Write(*observability_file_handle.internal_file_handle, buffer, nr_bytes);
+}
+void ObservabilityFileSystem::FileSync(FileHandle &handle) {
+	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kFileSync, handle.GetPath());
+	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
+	internal_filesystem->FileSync(*observability_file_handle.internal_file_handle);
 }
 void ObservabilityFileSystem::Truncate(FileHandle &handle, int64_t new_size) {
 	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
@@ -89,9 +109,6 @@ bool ObservabilityFileSystem::ListFiles(const string &directory,
 void ObservabilityFileSystem::MoveFile(const string &source, const string &target, optional_ptr<FileOpener> opener) {
 	internal_filesystem->MoveFile(source, target, opener);
 }
-bool ObservabilityFileSystem::FileExists(const string &filename, optional_ptr<FileOpener> opener) {
-	return internal_filesystem->FileExists(filename, opener);
-}
 void ObservabilityFileSystem::RemoveFile(const string &filename, optional_ptr<FileOpener> opener) {
 	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kRemoveFile, filename);
 	internal_filesystem->RemoveFile(filename, opener);
@@ -112,11 +129,6 @@ idx_t ObservabilityFileSystem::SeekPosition(FileHandle &handle) {
 	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
 	return internal_filesystem->SeekPosition(*observability_file_handle.internal_file_handle);
 }
-void ObservabilityFileSystem::FileSync(FileHandle &handle) {
-	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kFileSync, handle.GetPath());
-	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
-	internal_filesystem->FileSync(*observability_file_handle.internal_file_handle);
-}
 bool ObservabilityFileSystem::OnDiskFile(FileHandle &handle) {
 	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
 	return internal_filesystem->OnDiskFile(*observability_file_handle.internal_file_handle);
@@ -124,10 +136,6 @@ bool ObservabilityFileSystem::OnDiskFile(FileHandle &handle) {
 bool ObservabilityFileSystem::Trim(FileHandle &handle, idx_t offset_bytes, idx_t length_bytes) {
 	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
 	return internal_filesystem->Trim(*observability_file_handle.internal_file_handle, offset_bytes, length_bytes);
-}
-FileType ObservabilityFileSystem::GetFileType(FileHandle &handle) {
-	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
-	return internal_filesystem->GetFileType(*observability_file_handle.internal_file_handle);
 }
 
 } // namespace duckdb
