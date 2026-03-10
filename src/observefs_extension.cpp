@@ -253,6 +253,10 @@ void LoadInternal(ExtensionLoader &loader) {
 
 	// Register external file cache access query function.
 	loader.RegisterFunction(ExternalFileCacheAccessQueryFunc());
+
+	// Set extension description.
+	loader.SetDescription("Filesystem observability extension to record I/O metrics (i.e., latency, operation counts) "
+	                      "and allow wrapping additional DuckDB-compatible filesystems.");
 }
 
 } // namespace
