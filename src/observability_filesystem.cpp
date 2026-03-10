@@ -1,5 +1,6 @@
 #include "observability_filesystem.hpp"
 
+#include "duckdb/common/file_opener.hpp"
 #include "duckdb/common/string_util.hpp"
 #include "duckdb/main/client_context.hpp"
 #include "external_file_cache_stats_recorder.hpp"
@@ -41,7 +42,7 @@ string ObservabilityFileSystem::GetName() const {
 void ObservabilityFileSystem::ClearObservabilityData() {
 	auto state = instance_state.lock();
 	if (!state) {
-		return;
+		throw InternalException("ObservabilityFileSystem: instance state is no longer valid");
 	}
 	// Reset all profile collectors
 	// Note: We don't have direct access to all collectors, so we rely on individual connection resets
@@ -50,13 +51,15 @@ void ObservabilityFileSystem::ClearObservabilityData() {
 string ObservabilityFileSystem::GetHumanReadableStats(connection_t conn_id) {
 	auto state = instance_state.lock();
 	if (!state) {
-		return "";
+		throw InternalException("ObservabilityFileSystem: instance state is no longer valid");
 	}
 
 	if (conn_id != DConstants::INVALID_INDEX) {
 		// Get stats for specific connection
-		auto &collector = state->profile_collector_manager.GetProfileCollectorOrDefault(conn_id);
-		return collector.GetHumanReadableStats();
+		auto *collector = state->metrics_collector_manager.GetMetricsCollector(conn_id);
+		if (collector) {
+			return collector->GetHumanReadableStats();
+		}
 	}
 
 	// Get stats for all connections (not directly supported in current implementation)
@@ -69,6 +72,9 @@ void ObservabilityFileSystem::Read(FileHandle &handle, void *buffer, int64_t nr_
 
 	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
 	auto state = instance_state.lock();
+	if (!state) {
+		throw InternalException("ObservabilityFileSystem: instance state is no longer valid");
+	}
 	auto *metrics_coll = GetMetricsCollector(state, observability_file_handle.GetConnectionId());
 
 	if (metrics_coll) {
@@ -84,6 +90,9 @@ int64_t ObservabilityFileSystem::Read(FileHandle &handle, void *buffer, int64_t 
 
 	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
 	auto state = instance_state.lock();
+	if (!state) {
+		throw InternalException("ObservabilityFileSystem: instance state is no longer valid");
+	}
 	auto *metrics_coll = GetMetricsCollector(state, observability_file_handle.GetConnectionId());
 
 	if (metrics_coll) {
@@ -98,6 +107,9 @@ unique_ptr<FileHandle> ObservabilityFileSystem::OpenFile(const string &path, Fil
                                                          optional_ptr<FileOpener> opener) {
 	auto conn_id = GetConnectionId(opener);
 	auto state = instance_state.lock();
+	if (!state) {
+		throw InternalException("ObservabilityFileSystem: instance state is no longer valid");
+	}
 	auto *metrics_coll = GetMetricsCollector(state, conn_id);
 
 	unique_ptr<FileHandle> file_handle;
@@ -117,6 +129,9 @@ unique_ptr<FileHandle> ObservabilityFileSystem::OpenFile(const string &path, Fil
 int64_t ObservabilityFileSystem::GetFileSize(FileHandle &handle) {
 	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
 	auto state = instance_state.lock();
+	if (!state) {
+		throw InternalException("ObservabilityFileSystem: instance state is no longer valid");
+	}
 	auto *metrics_coll = GetMetricsCollector(state, observability_file_handle.GetConnectionId());
 
 	if (metrics_coll) {
@@ -137,6 +152,9 @@ unique_ptr<FileHandle> ObservabilityFileSystem::OpenCompressedFile(QueryContext 
 void ObservabilityFileSystem::Write(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) {
 	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
 	auto state = instance_state.lock();
+	if (!state) {
+		throw InternalException("ObservabilityFileSystem: instance state is no longer valid");
+	}
 	auto *metrics_coll = GetMetricsCollector(state, observability_file_handle.GetConnectionId());
 
 	if (metrics_coll) {
@@ -150,6 +168,9 @@ void ObservabilityFileSystem::Write(FileHandle &handle, void *buffer, int64_t nr
 int64_t ObservabilityFileSystem::Write(FileHandle &handle, void *buffer, int64_t nr_bytes) {
 	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
 	auto state = instance_state.lock();
+	if (!state) {
+		throw InternalException("ObservabilityFileSystem: instance state is no longer valid");
+	}
 	auto *metrics_coll = GetMetricsCollector(state, observability_file_handle.GetConnectionId());
 
 	if (metrics_coll) {
@@ -176,6 +197,9 @@ bool ObservabilityFileSystem::ListFiles(const string &directory,
                                         const std::function<void(const string &, bool)> &callback, FileOpener *opener) {
 	auto conn_id = GetConnectionId(opener);
 	auto state = instance_state.lock();
+	if (!state) {
+		throw InternalException("ObservabilityFileSystem: instance state is no longer valid");
+	}
 	auto *metrics_coll = GetMetricsCollector(state, conn_id);
 
 	if (metrics_coll) {
@@ -197,6 +221,9 @@ bool ObservabilityFileSystem::FileExists(const string &filename, optional_ptr<Fi
 void ObservabilityFileSystem::RemoveFile(const string &filename, optional_ptr<FileOpener> opener) {
 	auto conn_id = GetConnectionId(opener);
 	auto state = instance_state.lock();
+	if (!state) {
+		throw InternalException("ObservabilityFileSystem: instance state is no longer valid");
+	}
 	auto *metrics_coll = GetMetricsCollector(state, conn_id);
 
 	if (metrics_coll) {
@@ -210,6 +237,9 @@ void ObservabilityFileSystem::RemoveFile(const string &filename, optional_ptr<Fi
 vector<OpenFileInfo> ObservabilityFileSystem::Glob(const string &path, FileOpener *opener) {
 	auto conn_id = GetConnectionId(opener);
 	auto state = instance_state.lock();
+	if (!state) {
+		throw InternalException("ObservabilityFileSystem: instance state is no longer valid");
+	}
 	auto *metrics_coll = GetMetricsCollector(state, conn_id);
 
 	if (metrics_coll) {
@@ -234,6 +264,9 @@ idx_t ObservabilityFileSystem::SeekPosition(FileHandle &handle) {
 void ObservabilityFileSystem::FileSync(FileHandle &handle) {
 	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
 	auto state = instance_state.lock();
+	if (!state) {
+		throw InternalException("ObservabilityFileSystem: instance state is no longer valid");
+	}
 	auto *metrics_coll = GetMetricsCollector(state, observability_file_handle.GetConnectionId());
 
 	if (metrics_coll) {

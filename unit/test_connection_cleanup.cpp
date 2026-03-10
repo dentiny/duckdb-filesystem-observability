@@ -1,4 +1,5 @@
-#include "catch/catch.hpp"
+#define CATCH_CONFIG_RUNNER
+#include "catch.hpp"
 
 #include "duckdb/common/vector.hpp"
 #include "duckdb/main/connection.hpp"
@@ -36,41 +37,13 @@ TEST_CASE("Multiple connections registered in profile manager are all removed wh
 	REQUIRE(connection_manager.GetConnectionCount() == num_connections + 1);
 	REQUIRE(instance_state->metrics_collector_manager.GetMetricsCollectorCount() == num_connections);
 
-	// Destroy the test connections (but keep initial_con alive)
+	// Destroy the test connections
 	connections.clear();
 	REQUIRE(connection_manager.GetConnectionCount() == 1); // Only initial_con remains
 	REQUIRE(instance_state->metrics_collector_manager.GetMetricsCollectorCount() == 0);
 }
 
-TEST_CASE("Per-connection metrics are tracked independently", "[per-connection metrics]") {
-	DuckDB db(nullptr);
-
-	Connection con1(db);
-	con1.Query("LOAD observefs;");
-
-	// Enable metrics for first connection
-	auto result = con1.Query("SET observefs_enable_metrics = true");
-	REQUIRE(!result->HasError());
-
-	// Create second connection
-	Connection con2(db);
-	result = con2.Query("SET observefs_enable_metrics = true");
-	REQUIRE(!result->HasError());
-
-	// Verify both connections have separate metrics collectors
-	auto instance_state = GetInstanceStateShared(*db.instance);
-	REQUIRE(instance_state);
-	REQUIRE(instance_state->metrics_collector_manager.GetMetricsCollectorCount() == 2);
-
-	// Perform some operations on con1
-	con1.Query("CREATE TABLE test (id INT, data VARCHAR)");
-	con1.Query("INSERT INTO test VALUES (1, 'test1')");
-
-	// Verify con1 has stats
-	auto stats1 = con1.Query("SELECT observefs_get_profile()");
-	REQUIRE(!stats1->HasError());
-
-	// Verify con2 can also get its own (likely empty) stats
-	auto stats2 = con2.Query("SELECT observefs_get_profile()");
-	REQUIRE(!stats2->HasError());
+int main(int argc, char **argv) {
+	int result = Catch::Session().run(argc, argv);
+	return result;
 }

@@ -53,7 +53,7 @@ public:
 	// Clear observability data for all connections.
 	void ClearObservabilityData();
 	// Get human-readable metrics stats for a specific connection.
-	// If conn_id is DConstants::INVALID_INDEX, returns stats for all connections.
+	// If conn_id is invalid (DConstants::INVALID_INDEX), returns stats for all connections.
 	string GetHumanReadableStats(connection_t conn_id);
 
 	// Doesn't update file offset (which acts as `PRead` semantics).
@@ -145,7 +145,7 @@ private:
 
 	// Used to access remote files.
 	unique_ptr<FileSystem> internal_filesystem;
-	// Weak pointer to instance state for per-connection metrics
+	// Weak pointer to instance state for per-connection metrics, use weak_ptr to avoid circular dependency.
 	weak_ptr<ObservefsInstanceState> instance_state;
 };
 

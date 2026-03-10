@@ -3,6 +3,7 @@
 #include "duckdb.hpp"
 #include "duckdb/common/exception.hpp"
 #include "duckdb/common/helper.hpp"
+#include "duckdb/common/mutex.hpp"
 #include "duckdb/common/opener_file_system.hpp"
 #include "duckdb/common/string_util.hpp"
 #include "duckdb/common/unique_ptr.hpp"
@@ -100,6 +101,26 @@ void WrapFileSystem(const DataChunk &args, ExpressionState &state, Vector &resul
 void ClearExternalFileCacheStatsRecord(DataChunk &args, ExpressionState &state, Vector &result) {
 	GetExternalFileCacheStatsRecorder().ClearCacheAccessRecord();
 	result.Reference(Value(SUCCESS));
+}
+
+// Callback for enable/disable per-connection metrics collection.
+void SetObservefsEnableMetrics(ClientContext &context, SetScope scope, Value &parameter) {
+	auto instance_state = GetInstanceStateShared(*context.db);
+	if (!instance_state) {
+		return;
+	}
+	const auto enable = parameter.GetValue<bool>();
+	const auto conn_id = context.GetConnectionId();
+	if (enable) {
+		instance_state->metrics_collector_manager.GetOrCreateMetricsCollector(conn_id);
+	} else {
+		instance_state->metrics_collector_manager.RemoveMetricsCollector(conn_id);
+	}
+
+	// Register connection cleanup callback
+	auto &config = DBConfig::GetConfig(context);
+	config.extension_callbacks.emplace_back(
+	    make_uniq<ObservefsExtensionCallback>(GetInstanceStateShared(*context.db), conn_id));
 }
 
 // Extract or get httpfs filesystem.
@@ -227,24 +248,8 @@ void LoadInternal(ExtensionLoader &loader) {
 	    LogicalType {LogicalTypeId::BOOLEAN}, true, std::move(enable_external_file_cache_stats_callback));
 
 	// Add enable metrics configuration option
-	auto enable_metrics_callback = [instance_state](ClientContext &context, SetScope scope, Value &parameter) {
-		const auto enable = parameter.GetValue<bool>();
-		const auto conn_id = context.GetConnectionId();
-
-		if (enable) {
-			// Create metrics collector for this connection
-			instance_state->metrics_collector_manager.GetOrCreateMetricsCollector(conn_id);
-
-			// Register cleanup callback
-			auto callback = make_uniq<ObservefsExtensionCallback>(instance_state, conn_id);
-			context.registered_state->Insert("observefs_callback", std::move(callback));
-		} else {
-			// Remove metrics collector
-			instance_state->metrics_collector_manager.RemoveMetricsCollector(conn_id);
-		}
-	};
 	config.AddExtensionOption("observefs_enable_metrics", "Enable per-connection metrics collection for observefs",
-	                          LogicalType {LogicalTypeId::BOOLEAN}, Value(false), std::move(enable_metrics_callback));
+	                          LogicalType {LogicalTypeId::BOOLEAN}, Value(false), SetObservefsEnableMetrics);
 
 	// Register observability data cleanup function.
 	ScalarFunction clear_cache_function("observefs_clear", /*arguments=*/ {},

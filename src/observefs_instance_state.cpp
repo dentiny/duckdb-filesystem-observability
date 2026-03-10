@@ -11,7 +11,7 @@ namespace duckdb {
 //===--------------------------------------------------------------------===//
 
 MetricsCollector &InstanceMetricsCollectorManager::GetOrCreateMetricsCollector(connection_t connection_id) {
-	concurrency::lock_guard<concurrency::mutex> lock(mutex);
+	const lock_guard<mutex> lock(mu);
 	auto it = metrics_collectors.find(connection_id);
 	if (it != metrics_collectors.end()) {
 		return *it->second;
@@ -24,7 +24,7 @@ MetricsCollector &InstanceMetricsCollectorManager::GetOrCreateMetricsCollector(c
 }
 
 MetricsCollector *InstanceMetricsCollectorManager::GetMetricsCollector(connection_t connection_id) const {
-	concurrency::lock_guard<concurrency::mutex> lock(mutex);
+	const lock_guard<mutex> lock(mu);
 	auto it = metrics_collectors.find(connection_id);
 	if (it != metrics_collectors.end()) {
 		return it->second.get();
@@ -33,7 +33,7 @@ MetricsCollector *InstanceMetricsCollectorManager::GetMetricsCollector(connectio
 }
 
 void InstanceMetricsCollectorManager::ResetMetricsCollector(connection_t connection_id) {
-	concurrency::lock_guard<concurrency::mutex> lock(mutex);
+	const lock_guard<mutex> lock(mu);
 	auto it = metrics_collectors.find(connection_id);
 	if (it != metrics_collectors.end() && it->second != nullptr) {
 		it->second->Reset();
@@ -41,12 +41,12 @@ void InstanceMetricsCollectorManager::ResetMetricsCollector(connection_t connect
 }
 
 void InstanceMetricsCollectorManager::RemoveMetricsCollector(connection_t connection_id) {
-	concurrency::lock_guard<concurrency::mutex> lock(mutex);
+	const lock_guard<mutex> lock(mu);
 	metrics_collectors.erase(connection_id);
 }
 
 idx_t InstanceMetricsCollectorManager::GetMetricsCollectorCount() const {
-	concurrency::lock_guard<concurrency::mutex> lock(mutex);
+	const lock_guard<mutex> lock(mu);
 	return metrics_collectors.size();
 }
 

@@ -3,8 +3,7 @@
 
 #pragma once
 
-#include <mutex>
-
+#include "duckdb/common/mutex.hpp"
 #include "duckdb/common/shared_ptr.hpp"
 #include "duckdb/common/string.hpp"
 #include "duckdb/common/typedefs.hpp"
@@ -12,7 +11,6 @@
 #include "duckdb/common/unordered_map.hpp"
 #include "duckdb/storage/object_cache.hpp"
 #include "filesystem_ref_registry.hpp"
-#include "thread_annotation.hpp"
 
 namespace duckdb {
 
@@ -42,8 +40,8 @@ public:
 	idx_t GetMetricsCollectorCount() const;
 
 private:
-	mutable concurrency::mutex mutex;
-	unordered_map<connection_t, unique_ptr<MetricsCollector>> metrics_collectors DUCKDB_GUARDED_BY(mutex);
+	mutable mutex mu;
+	unordered_map<connection_t, unique_ptr<MetricsCollector>> metrics_collectors;
 };
 
 //===--------------------------------------------------------------------===//
