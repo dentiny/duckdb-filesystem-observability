@@ -34,6 +34,7 @@ set(EXTENSION_SOURCES
     src/numeric_utils.cpp
     src/observability_filesystem.cpp
     src/observefs_extension.cpp
+    src/observefs_extension_callback.cpp
     src/observefs_instance_state.cpp
     src/operation_latency_collector.cpp
     src/operation_size_collector.cpp
@@ -88,3 +89,6 @@ target_link_libraries(test_string_utils ${EXTENSION_NAME})
 
 add_executable(test_quantile_estimator unit/test_quantile_estimator.cpp)
 target_link_libraries(test_quantile_estimator ${EXTENSION_NAME})
+
+add_executable(test_connection_cleanup unit/test_connection_cleanup.cpp)
+target_link_libraries(test_connection_cleanup ${EXTENSION_NAME})

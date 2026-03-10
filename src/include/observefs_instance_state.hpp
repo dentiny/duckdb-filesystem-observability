@@ -7,10 +7,44 @@
 
 #include "duckdb/common/shared_ptr.hpp"
 #include "duckdb/common/string.hpp"
+#include "duckdb/common/typedefs.hpp"
+#include "duckdb/common/unique_ptr.hpp"
+#include "duckdb/common/unordered_map.hpp"
 #include "duckdb/storage/object_cache.hpp"
 #include "filesystem_ref_registry.hpp"
+#include "thread_annotation.hpp"
 
 namespace duckdb {
+
+// Forward declarations
+class MetricsCollector;
+class ClientContext;
+class DatabaseInstance;
+
+//===--------------------------------------------------------------------===//
+// Per-connection metrics collector manager
+//===--------------------------------------------------------------------===//
+
+// Manages per-connection metrics collectors.
+// Each connection has its own collector so stats can be tracked independently.
+class InstanceMetricsCollectorManager {
+public:
+	// Gets or creates the MetricsCollector for the given connection.
+	MetricsCollector &GetOrCreateMetricsCollector(connection_t connection_id);
+	// Returns the metrics collector for the given connection.
+	// If no collector exists for the connection, returns nullptr.
+	MetricsCollector *GetMetricsCollector(connection_t connection_id) const;
+	// Resets the metrics collector for the given connection.
+	void ResetMetricsCollector(connection_t connection_id);
+	// Removes the metrics collector for the given connection.
+	void RemoveMetricsCollector(connection_t connection_id);
+	// Returns the number of registered metrics collectors, exposed for testing and debugging purposes.
+	idx_t GetMetricsCollectorCount() const;
+
+private:
+	mutable concurrency::mutex mutex;
+	unordered_map<connection_t, unique_ptr<MetricsCollector>> metrics_collectors DUCKDB_GUARDED_BY(mutex);
+};
 
 //===--------------------------------------------------------------------===//
 // Main per-instance state container
@@ -21,6 +55,7 @@ struct ObservefsInstanceState : public ObjectCacheEntry {
 	static constexpr const char *CACHE_KEY = "observefs_instance_state";
 
 	ObservabilityFsRefRegistry registry;
+	InstanceMetricsCollectorManager metrics_collector_manager;
 
 	ObservefsInstanceState() = default;
 
@@ -46,5 +81,12 @@ shared_ptr<ObservefsInstanceState> GetInstanceStateShared(DatabaseInstance &inst
 
 // Get instance state, throwing if not found.
 ObservefsInstanceState &GetInstanceStateOrThrow(DatabaseInstance &instance);
+
+// Get instance state from ClientContext, throwing if not found
+ObservefsInstanceState &GetInstanceStateOrThrow(ClientContext &context);
+
+// Get the per-connection metrics collector for the given connection.
+// Returns nullptr if no collector exists or connection_id is invalid.
+MetricsCollector *GetMetricsCollector(const shared_ptr<ObservefsInstanceState> &instance_state, connection_t conn_id);
 
 } // namespace duckdb

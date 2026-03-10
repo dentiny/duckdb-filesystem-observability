@@ -15,6 +15,7 @@
 #include "hffs.hpp"
 #include "httpfs_extension.hpp"
 #include "observefs_extension.hpp"
+#include "observefs_extension_callback.hpp"
 #include "observefs_instance_state.hpp"
 #include "observability_filesystem.hpp"
 #include "s3fs.hpp"
@@ -52,10 +53,16 @@ void GetProfileStats(const DataChunk &args, ExpressionState &state, Vector &resu
 	string latest_stat;
 	auto &duckdb_instance = GetDatabaseInstance(state);
 	auto &instance_state = GetInstanceStateOrThrow(duckdb_instance);
+
+	// Get connection ID from the current context
+	auto *executor = state.root.executor;
+	auto &client_context = executor->GetContext();
+	auto conn_id = client_context.GetConnectionId();
+
 	const auto &observefs_instances = instance_state.registry.GetAllObservabilityFs();
 	for (auto *cur_filesystem : observefs_instances) {
 		latest_stat += StringUtil::Format("Current filesystem: %s\n", cur_filesystem->GetName());
-		const auto cur_stats_str = cur_filesystem->GetHumanReadableStats();
+		const auto cur_stats_str = cur_filesystem->GetHumanReadableStats(conn_id);
 		if (cur_stats_str.empty()) {
 			latest_stat += "No interested IO operations issued.";
 		} else {
@@ -81,7 +88,8 @@ void WrapFileSystem(const DataChunk &args, ExpressionState &state, Vector &resul
 		throw InvalidInputException("Filesystem %s hasn't been registered yet!", filesystem_name);
 	}
 
-	auto observe_filesystem = make_uniq<ObservabilityFileSystem>(std::move(internal_filesystem));
+	auto instance_state_shared = GetInstanceStateShared(duckdb_instance);
+	auto observe_filesystem = make_uniq<ObservabilityFileSystem>(std::move(internal_filesystem), instance_state_shared);
 	auto &instance_state = GetInstanceStateOrThrow(duckdb_instance);
 	instance_state.registry.Register(observe_filesystem.get());
 	vfs.RegisterSubSystem(std::move(observe_filesystem));
@@ -189,19 +197,19 @@ void LoadInternal(ExtensionLoader &loader) {
 	//
 	// Register http filesystem.
 	auto http_fs = ExtractOrCreateHttpfs(vfs);
-	auto observability_httpfs_filesystem = make_uniq<ObservabilityFileSystem>(std::move(http_fs));
+	auto observability_httpfs_filesystem = make_uniq<ObservabilityFileSystem>(std::move(http_fs), instance_state);
 	instance_state->registry.Register(observability_httpfs_filesystem.get());
 	vfs.RegisterSubSystem(std::move(observability_httpfs_filesystem));
 
 	// Register hugging filesystem.
 	auto hf_fs = ExtractOrCreateHuggingfs(vfs);
-	auto observability_hf_filesystem = make_uniq<ObservabilityFileSystem>(std::move(hf_fs));
+	auto observability_hf_filesystem = make_uniq<ObservabilityFileSystem>(std::move(hf_fs), instance_state);
 	instance_state->registry.Register(observability_hf_filesystem.get());
 	vfs.RegisterSubSystem(std::move(observability_hf_filesystem));
 
 	// Register s3 filesystem.
 	auto s3_fs = ExtractOrCreateS3fs(vfs, duckdb_instance);
-	auto observability_s3_filesystem = make_uniq<ObservabilityFileSystem>(std::move(s3_fs));
+	auto observability_s3_filesystem = make_uniq<ObservabilityFileSystem>(std::move(s3_fs), instance_state);
 	instance_state->registry.Register(observability_s3_filesystem.get());
 	vfs.RegisterSubSystem(std::move(observability_s3_filesystem));
 	auto &config = DBConfig::GetConfig(duckdb_instance);
@@ -217,6 +225,26 @@ void LoadInternal(ExtensionLoader &loader) {
 	config.AddExtensionOption(
 	    "observefs_enable_external_file_cache_stats", "Whether to enable stats record for external file cache.",
 	    LogicalType {LogicalTypeId::BOOLEAN}, true, std::move(enable_external_file_cache_stats_callback));
+
+	// Add enable metrics configuration option
+	auto enable_metrics_callback = [instance_state](ClientContext &context, SetScope scope, Value &parameter) {
+		const auto enable = parameter.GetValue<bool>();
+		const auto conn_id = context.GetConnectionId();
+
+		if (enable) {
+			// Create metrics collector for this connection
+			instance_state->metrics_collector_manager.GetOrCreateMetricsCollector(conn_id);
+
+			// Register cleanup callback
+			auto callback = make_uniq<ObservefsExtensionCallback>(instance_state, conn_id);
+			context.registered_state->Insert("observefs_callback", std::move(callback));
+		} else {
+			// Remove metrics collector
+			instance_state->metrics_collector_manager.RemoveMetricsCollector(conn_id);
+		}
+	};
+	config.AddExtensionOption("observefs_enable_metrics", "Enable per-connection metrics collection for observefs",
+	                          LogicalType {LogicalTypeId::BOOLEAN}, Value(false), std::move(enable_metrics_callback));
 
 	// Register observability data cleanup function.
 	ScalarFunction clear_cache_function("observefs_clear", /*arguments=*/ {},

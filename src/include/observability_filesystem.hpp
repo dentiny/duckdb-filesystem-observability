@@ -15,24 +15,32 @@
 
 namespace duckdb {
 
-// Forward declaration.
+// Forward declarations.
 class ObservabilityFileSystem;
+struct ObservefsInstanceState;
 
 class ObservabilityFileSystemHandle : public FileHandle {
 public:
-	ObservabilityFileSystemHandle(unique_ptr<FileHandle> internal_file_handle_p, ObservabilityFileSystem &fs);
+	ObservabilityFileSystemHandle(unique_ptr<FileHandle> internal_file_handle_p, ObservabilityFileSystem &fs,
+	                              connection_t connection_id_p);
 	~ObservabilityFileSystemHandle() = default;
 
 	void Close() override {
 	}
 
+	connection_t GetConnectionId() const {
+		return connection_id;
+	}
+
 	unique_ptr<FileHandle> internal_file_handle;
+	connection_t connection_id;
 };
 
 class ObservabilityFileSystem : public FileSystem {
 public:
-	explicit ObservabilityFileSystem(unique_ptr<FileSystem> internal_filesystem_p)
-	    : internal_filesystem(std::move(internal_filesystem_p)) {
+	explicit ObservabilityFileSystem(unique_ptr<FileSystem> internal_filesystem_p,
+	                                 weak_ptr<ObservefsInstanceState> instance_state_p)
+	    : internal_filesystem(std::move(internal_filesystem_p)), instance_state(std::move(instance_state_p)) {
 	}
 	~ObservabilityFileSystem() override {
 	}
@@ -42,11 +50,11 @@ public:
 		return internal_filesystem.get();
 	}
 
-	// Clear observability data.
+	// Clear observability data for all connections.
 	void ClearObservabilityData();
-	// Get human-readable metrics stats.
-	// If no stats collected, which means no interested IO operations for current filesystem.
-	string GetHumanReadableStats();
+	// Get human-readable metrics stats for a specific connection.
+	// If conn_id is DConstants::INVALID_INDEX, returns stats for all connections.
+	string GetHumanReadableStats(connection_t conn_id);
 
 	// Doesn't update file offset (which acts as `PRead` semantics).
 	void Read(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) override;
@@ -132,10 +140,13 @@ protected:
 	}
 
 private:
+	// Helper to get connection ID from FileOpener
+	connection_t GetConnectionId(optional_ptr<FileOpener> opener);
+
 	// Used to access remote files.
 	unique_ptr<FileSystem> internal_filesystem;
-	// Overall histogram.
-	MetricsCollector metrics_collector;
+	// Weak pointer to instance state for per-connection metrics
+	weak_ptr<ObservefsInstanceState> instance_state;
 };
 
 } // namespace duckdb
