@@ -1,5 +1,4 @@
-#define CATCH_CONFIG_RUNNER
-#include "catch.hpp"
+#include "catch/catch.hpp"
 
 #include <algorithm>
 #include <random>
@@ -132,9 +131,4 @@ TEST_CASE("Large scale quantile test", "[quantile test]") {
 	const double p99 = qe.p99();
 	REQUIRE(p99 >= 990 - MAX_TOLERABLE_DIFF);
 	REQUIRE(p99 <= 990 + MAX_TOLERABLE_DIFF);
-}
-
-int main(int argc, char **argv) {
-	int result = Catch::Session().run(argc, argv);
-	return result;
 }
