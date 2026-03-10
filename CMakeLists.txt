@@ -74,17 +74,5 @@ install(
   LIBRARY DESTINATION "${INSTALL_LIB_DIR}"
   ARCHIVE DESTINATION "${INSTALL_LIB_DIR}")
 
-# Test cases.
-include_directories(duckdb/third_party/catch)
-
-add_executable(test_histogram unit/test_histogram.cpp)
-target_link_libraries(test_histogram ${EXTENSION_NAME})
-
-add_executable(test_no_destructor unit/test_no_destructor.cpp)
-target_link_libraries(test_no_destructor ${EXTENSION_NAME})
-
-add_executable(test_string_utils unit/test_string_utils.cpp)
-target_link_libraries(test_string_utils ${EXTENSION_NAME})
-
-add_executable(test_quantile_estimator unit/test_quantile_estimator.cpp)
-target_link_libraries(test_quantile_estimator ${EXTENSION_NAME})
+# Unit tests.
+add_subdirectory(test/unittest)
