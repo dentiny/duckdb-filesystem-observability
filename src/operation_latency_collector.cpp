@@ -15,7 +15,7 @@ const std::array<LatencyHeuristic, static_cast<size_t>(IoOperation::kUnknown)> k
     {0, 3000, 100},
     // kGlob
     {0, 3000, 100},
-    // kGetFileSize,
+    // kStats,
     {0, 1000, 100},
 }};
 
