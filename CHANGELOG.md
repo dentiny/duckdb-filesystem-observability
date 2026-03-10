@@ -1,3 +1,23 @@
+# 0.4.7
+
+## Changed
+
+- Upgrade DuckDB and extension-ci-tools to v1.5.0 ([#82])
+
+[#82]: https://github.com/dentiny/duckdb-filesystem-observability/pull/82
+
+## Added
+
+- Add extension description ([#83])
+
+[#83]: https://github.com/dentiny/duckdb-filesystem-observability/pull/83
+
+## Fixed
+
+- Fix non-exitent file handle when open ([#78])
+
+[#78]: https://github.com/dentiny/duckdb-filesystem-observability/pull/78
+
 # 0.4.6
 
 ## Changed
