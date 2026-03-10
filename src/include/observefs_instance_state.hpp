@@ -16,7 +16,8 @@ namespace duckdb {
 // Main per-instance state container
 // Inherits from ObjectCacheEntry for automatic cleanup when DatabaseInstance is destroyed
 //===--------------------------------------------------------------------===//
-struct ObservefsInstanceState : public ObjectCacheEntry {
+class ObservefsInstanceState : public ObjectCacheEntry {
+public:
 	static constexpr const char *OBJECT_TYPE = "ObservefsInstanceState";
 	static constexpr const char *CACHE_KEY = "observefs_instance_state";
 
@@ -31,6 +32,11 @@ struct ObservefsInstanceState : public ObjectCacheEntry {
 
 	static string ObjectType() {
 		return OBJECT_TYPE;
+	}
+
+	optional_idx GetEstimatedCacheMemory() const override {
+		// Cannot be evicted.
+		return optional_idx {};
 	}
 };
 

@@ -51,7 +51,8 @@ set(EXTENSION_SOURCES
     duckdb-httpfs/src/httpfs_curl_client.cpp
     duckdb-httpfs/src/httpfs_extension.cpp
     duckdb-httpfs/src/httpfs_httplib_client.cpp
-    duckdb-httpfs/src/s3fs.cpp)
+    duckdb-httpfs/src/s3fs.cpp
+    duckdb-httpfs/src/s3_multi_part_upload.cpp)
 
 build_static_extension(${TARGET_NAME} ${EXTENSION_SOURCES})
 build_loadable_extension(${TARGET_NAME} " " ${EXTENSION_SOURCES})
