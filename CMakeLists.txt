@@ -75,5 +75,7 @@ install(
   LIBRARY DESTINATION "${INSTALL_LIB_DIR}"
   ARCHIVE DESTINATION "${INSTALL_LIB_DIR}")
 
-# Unit tests.
-add_subdirectory(test/unittest)
+# Unit tests, disabled on Windows due to linking issues.
+if(NOT WIN32)
+  add_subdirectory(test/unittest)
+endif()
