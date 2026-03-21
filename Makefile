@@ -25,6 +25,7 @@ define PREPARE_HTTPFS_TESTS
 	@find $(HTTPFS_TEST_TMPDIR)/test -type f \( -name "*.test" -o -name "*.test_slow" \) -exec \
 		sed -i 's/^require httpfs$$/require observefs\n\nstatement ok\nSELECT observefs_clear();/' {} +
 	@for f in $(HTTPFS_TEST_BLACKLIST); do rm -f $(HTTPFS_TEST_TMPDIR)/$$f; done
+	@rm -rf $(HTTPFS_TEST_TMPDIR)
 endef
 
 test_reldebug_httpfs:
