@@ -11,6 +11,13 @@ if(UNIX OR APPLE)
   )
 endif()
 
+# Override DuckDB encryption library, mimics httpfs extension behavior.
+if (NOT EMSCRIPTEN)
+  add_definitions(-DOVERRIDE_ENCRYPTION_UTILS=1)
+else()
+  set(DUCKDB_EXTENSION_HTTPFS_LINKED_LIBS "../../third_party/mbedtls/libduckdb_mbedtls.a")
+endif()
+
 find_package(OpenSSL REQUIRED)
 find_package(CURL REQUIRED)
 

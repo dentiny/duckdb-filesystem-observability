@@ -11,4 +11,32 @@ format-all: format
 	find test/unittest -iname *.hpp -o -iname *.cpp | xargs clang-format --sort-includes=0 -style=file -i
 	cmake-format -i CMakeLists.txt
 
-PHONY: format-all
+HTTPFS_TEST_TMPDIR := /tmp/observefs-httpfs-duckdb-httpfs-test
+
+# httpfs tests to skip, since caching layer changes behavior.
+HTTPFS_TEST_BLACKLIST := test/sql/copy/s3/glob_s3_recursive.test_slow \
+	test/sql/settings/test_disabled_file_system_httpfs.test
+
+# Prepare httpfs tests: rewrite require httpfs -> observefs, inject observefs clear, remove blacklisted tests.
+define PREPARE_HTTPFS_TESTS
+	@rm -rf $(HTTPFS_TEST_TMPDIR)
+	@mkdir -p $(HTTPFS_TEST_TMPDIR)
+	@cp -r duckdb-httpfs/test $(HTTPFS_TEST_TMPDIR)/test
+	@find $(HTTPFS_TEST_TMPDIR)/test -type f \( -name "*.test" -o -name "*.test_slow" \) -exec \
+		sed -i 's/^require httpfs$$/require observefs\n\nstatement ok\nSELECT observefs_clear();/' {} +
+	@for f in $(HTTPFS_TEST_BLACKLIST); do rm -f $(HTTPFS_TEST_TMPDIR)/$$f; done
+endef
+
+test_reldebug_httpfs:
+	$(PREPARE_HTTPFS_TESTS)
+	./build/reldebug/test/unittest --test-dir $(HTTPFS_TEST_TMPDIR) "test/sql/*"
+
+test_release_httpfs:
+	$(PREPARE_HTTPFS_TESTS)
+	./build/release/test/unittest --test-dir $(HTTPFS_TEST_TMPDIR) "test/sql/*"
+
+test_debug_httpfs:
+	$(PREPARE_HTTPFS_TESTS)
+	./build/debug/test/unittest --test-dir $(HTTPFS_TEST_TMPDIR) "test/sql/*"
+
+.PHONY: format-all test_release_httpfs test_reldebug_httpfs test_debug_httpfs
