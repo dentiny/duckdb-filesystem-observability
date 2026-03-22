@@ -14,8 +14,7 @@ format-all: format
 HTTPFS_TEST_TMPDIR := /tmp/observefs-httpfs-duckdb-httpfs-test
 
 # httpfs tests to skip, since caching layer changes behavior.
-HTTPFS_TEST_BLACKLIST := test/sql/copy/s3/glob_s3_recursive.test_slow \
-	test/sql/settings/test_disabled_file_system_httpfs.test
+HTTPFS_TEST_BLACKLIST := test/sql/copy/s3/glob_s3_recursive.test_slow
 
 # Prepare httpfs tests: rewrite require httpfs -> observefs, inject observefs clear, remove blacklisted tests.
 define PREPARE_HTTPFS_TESTS
@@ -25,7 +24,6 @@ define PREPARE_HTTPFS_TESTS
 	@find $(HTTPFS_TEST_TMPDIR)/test -type f \( -name "*.test" -o -name "*.test_slow" \) -exec \
 		sed -i 's/^require httpfs$$/require observefs\n\nstatement ok\nSELECT observefs_clear();/' {} +
 	@for f in $(HTTPFS_TEST_BLACKLIST); do rm -f $(HTTPFS_TEST_TMPDIR)/$$f; done
-	@rm -rf $(HTTPFS_TEST_TMPDIR)
 endef
 
 test_reldebug_httpfs:

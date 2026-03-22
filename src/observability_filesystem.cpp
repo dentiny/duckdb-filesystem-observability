@@ -38,6 +38,7 @@ int64_t ObservabilityFileSystem::Read(FileHandle &handle, void *buffer, int64_t 
 }
 unique_ptr<FileHandle> ObservabilityFileSystem::OpenFile(const string &path, FileOpenFlags flags,
                                                          optional_ptr<FileOpener> opener) {
+	ThrowIfDisabled();
 	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kOpen, path);
 	auto file_handle = internal_filesystem->OpenFile(path, flags, opener);
 	if (!file_handle) {
@@ -61,6 +62,7 @@ timestamp_t ObservabilityFileSystem::GetLastModifiedTime(FileHandle &handle) {
 	return internal_filesystem->GetLastModifiedTime(*observability_file_handle.internal_file_handle);
 }
 bool ObservabilityFileSystem::FileExists(const string &filename, optional_ptr<FileOpener> opener) {
+	ThrowIfDisabled();
 	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kStats, filename);
 	return internal_filesystem->FileExists(filename, opener);
 }
@@ -93,27 +95,34 @@ void ObservabilityFileSystem::Truncate(FileHandle &handle, int64_t new_size) {
 	internal_filesystem->Truncate(*observability_file_handle.internal_file_handle, new_size);
 }
 bool ObservabilityFileSystem::DirectoryExists(const string &directory, optional_ptr<FileOpener> opener) {
+	ThrowIfDisabled();
 	return internal_filesystem->DirectoryExists(directory, opener);
 }
 void ObservabilityFileSystem::CreateDirectory(const string &directory, optional_ptr<FileOpener> opener) {
+	ThrowIfDisabled();
 	internal_filesystem->CreateDirectory(directory, opener);
 }
 void ObservabilityFileSystem::RemoveDirectory(const string &directory, optional_ptr<FileOpener> opener) {
+	ThrowIfDisabled();
 	internal_filesystem->RemoveDirectory(directory, opener);
 }
 bool ObservabilityFileSystem::ListFiles(const string &directory,
                                         const std::function<void(const string &, bool)> &callback, FileOpener *opener) {
+	ThrowIfDisabled();
 	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kList, directory);
 	return internal_filesystem->ListFiles(directory, callback, opener);
 }
 void ObservabilityFileSystem::MoveFile(const string &source, const string &target, optional_ptr<FileOpener> opener) {
+	ThrowIfDisabled();
 	internal_filesystem->MoveFile(source, target, opener);
 }
 void ObservabilityFileSystem::RemoveFile(const string &filename, optional_ptr<FileOpener> opener) {
+	ThrowIfDisabled();
 	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kRemoveFile, filename);
 	internal_filesystem->RemoveFile(filename, opener);
 }
 vector<OpenFileInfo> ObservabilityFileSystem::Glob(const string &path, FileOpener *opener) {
+	ThrowIfDisabled();
 	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kGlob, path);
 	return internal_filesystem->Glob(path, opener);
 }

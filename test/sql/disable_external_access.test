@@ -1,0 +1,17 @@
+# name: test/sql/disable_external_access.test
+# description: test that observability filesystem respects enable_external_access
+# group: [sql]
+
+require notwindows
+
+require observefs
+
+require parquet
+
+statement ok
+SET enable_external_access = false;
+
+statement error
+SELECT COUNT(*) FROM read_csv_auto('https://raw.githubusercontent.com/dentiny/duck-read-cache-fs/refs/heads/main/test/data/stock-exchanges.csv');
+----
+disabled by configuration

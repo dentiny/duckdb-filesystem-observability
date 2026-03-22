@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "duckdb/common/exception.hpp"
 #include "duckdb/common/file_system.hpp"
 #include "duckdb/common/open_file_info.hpp"
 #include "duckdb/common/shared_ptr.hpp"
@@ -31,8 +32,8 @@ public:
 
 class ObservabilityFileSystem : public FileSystem {
 public:
-	explicit ObservabilityFileSystem(unique_ptr<FileSystem> internal_filesystem_p)
-	    : internal_filesystem(std::move(internal_filesystem_p)) {
+	ObservabilityFileSystem(unique_ptr<FileSystem> internal_filesystem_p, FileSystem &vfs_p)
+	    : internal_filesystem(std::move(internal_filesystem_p)), vfs(vfs_p) {
 	}
 	~ObservabilityFileSystem() override {
 	}
@@ -113,13 +114,13 @@ public:
 		return internal_filesystem->ListSubSystems();
 	}
 	bool CanHandleFile(const string &fpath) override {
+		if (IsInternalFileSystemDisabled()) {
+			return false;
+		}
 		return internal_filesystem->CanHandleFile(fpath);
 	}
 	bool CanSeek() override {
 		return internal_filesystem->CanSeek();
-	}
-	void SetDisabledFileSystems(const vector<string> &names) override {
-		internal_filesystem->SetDisabledFileSystems(names);
 	}
 
 protected:
@@ -133,8 +134,23 @@ protected:
 	}
 
 private:
+	// Check whether the internal filesystem has been disabled by the VFS configuration.
+	bool IsInternalFileSystemDisabled() const {
+		return vfs.SubSystemIsDisabled(internal_filesystem->GetName());
+	}
+
+	// Throw PermissionException if the internal filesystem has been disabled.
+	void ThrowIfDisabled() const {
+		if (IsInternalFileSystemDisabled()) {
+			throw PermissionException("File system %s has been disabled by configuration",
+			                          internal_filesystem->GetName());
+		}
+	}
+
 	// Used to access remote files.
 	unique_ptr<FileSystem> internal_filesystem;
+	// VFS that owns this filesystem, used for checking disabled state.
+	FileSystem &vfs;
 	// Overall histogram.
 	MetricsCollector metrics_collector;
 };
