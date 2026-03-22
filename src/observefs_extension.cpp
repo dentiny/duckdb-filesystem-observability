@@ -81,7 +81,7 @@ void WrapFileSystem(const DataChunk &args, ExpressionState &state, Vector &resul
 		throw InvalidInputException("Filesystem %s hasn't been registered yet!", filesystem_name);
 	}
 
-	auto observe_filesystem = make_uniq<ObservabilityFileSystem>(std::move(internal_filesystem));
+	auto observe_filesystem = make_uniq<ObservabilityFileSystem>(std::move(internal_filesystem), vfs);
 	auto &instance_state = GetInstanceStateOrThrow(duckdb_instance);
 	instance_state.registry.Register(observe_filesystem.get());
 	vfs.RegisterSubSystem(std::move(observe_filesystem));
@@ -189,19 +189,19 @@ void LoadInternal(ExtensionLoader &loader) {
 	//
 	// Register http filesystem.
 	auto http_fs = ExtractOrCreateHttpfs(vfs);
-	auto observability_httpfs_filesystem = make_uniq<ObservabilityFileSystem>(std::move(http_fs));
+	auto observability_httpfs_filesystem = make_uniq<ObservabilityFileSystem>(std::move(http_fs), vfs);
 	instance_state->registry.Register(observability_httpfs_filesystem.get());
 	vfs.RegisterSubSystem(std::move(observability_httpfs_filesystem));
 
 	// Register hugging filesystem.
 	auto hf_fs = ExtractOrCreateHuggingfs(vfs);
-	auto observability_hf_filesystem = make_uniq<ObservabilityFileSystem>(std::move(hf_fs));
+	auto observability_hf_filesystem = make_uniq<ObservabilityFileSystem>(std::move(hf_fs), vfs);
 	instance_state->registry.Register(observability_hf_filesystem.get());
 	vfs.RegisterSubSystem(std::move(observability_hf_filesystem));
 
 	// Register s3 filesystem.
 	auto s3_fs = ExtractOrCreateS3fs(vfs, duckdb_instance);
-	auto observability_s3_filesystem = make_uniq<ObservabilityFileSystem>(std::move(s3_fs));
+	auto observability_s3_filesystem = make_uniq<ObservabilityFileSystem>(std::move(s3_fs), vfs);
 	instance_state->registry.Register(observability_s3_filesystem.get());
 	vfs.RegisterSubSystem(std::move(observability_s3_filesystem));
 	auto &config = DBConfig::GetConfig(duckdb_instance);
