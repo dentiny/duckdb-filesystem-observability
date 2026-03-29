@@ -1,3 +1,21 @@
+# 0.4.8
+
+## Changed
+
+- Upgrade DuckDB core and extension-ci-tools to v1.5.1 ([#90])
+
+[#90]: https://github.com/dentiny/duckdb-filesystem-observability/pull/90
+
+## Fixed
+
+- Fix disabled external filesystem ([#89])
+
+[#89]: https://github.com/dentiny/duckdb-filesystem-observability/pull/89
+
+- Fix glob implementation if extended version supported ([#91])
+
+[#91]: https://github.com/dentiny/duckdb-filesystem-observability/pull/91
+
 # 0.4.7
 
 ## Changed
