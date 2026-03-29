@@ -7,7 +7,7 @@ include_directories(${DuckDB_SOURCE_DIR}/third_party)
 include_directories(${DuckDB_SOURCE_DIR}/test/include)
 
 set(OBSERVEFS_UNITTEST_OBJECTS
-    main.cpp test_histogram.cpp test_no_destructor.cpp
+    main.cpp test_filesystem_glob.cpp test_histogram.cpp test_no_destructor.cpp
     test_quantile_estimator.cpp test_string_utils.cpp)
 
 add_executable(unittest_observefs ${OBSERVEFS_UNITTEST_OBJECTS})

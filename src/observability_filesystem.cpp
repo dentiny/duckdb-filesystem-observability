@@ -1,5 +1,7 @@
 #include "observability_filesystem.hpp"
 
+#include "duckdb/common/enums/file_glob_options.hpp"
+#include "duckdb/common/multi_file/multi_file_list.hpp"
 #include "duckdb/common/string_util.hpp"
 #include "duckdb/main/client_context.hpp"
 #include "external_file_cache_stats_recorder.hpp"
@@ -124,7 +126,8 @@ void ObservabilityFileSystem::RemoveFile(const string &filename, optional_ptr<Fi
 vector<OpenFileInfo> ObservabilityFileSystem::Glob(const string &path, FileOpener *opener) {
 	ThrowIfDisabled();
 	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kGlob, path);
-	return internal_filesystem->Glob(path, opener);
+	auto result = internal_filesystem->Glob(path, FileGlobOptions::ALLOW_EMPTY, opener);
+	return result->GetAllFiles();
 }
 void ObservabilityFileSystem::Seek(FileHandle &handle, idx_t location) {
 	auto &observability_file_handle = handle.Cast<ObservabilityFileSystemHandle>();
