@@ -60,12 +60,14 @@ public:
 	int64_t GetFileSize(FileHandle &handle) override;
 	// Get last modification timestamp.
 	timestamp_t GetLastModifiedTime(FileHandle &handle) override;
+	string GetVersionTag(FileHandle &handle) override;
 	unique_ptr<FileHandle> OpenCompressedFile(QueryContext context, unique_ptr<FileHandle> handle, bool write) override;
 	void Write(FileHandle &handle, void *buffer, int64_t nr_bytes, idx_t location) override;
 	int64_t Write(FileHandle &handle, void *buffer, int64_t nr_bytes) override;
 	void Truncate(FileHandle &handle, int64_t new_size) override;
 	bool DirectoryExists(const string &directory, optional_ptr<FileOpener> opener = nullptr) override;
 	void CreateDirectory(const string &directory, optional_ptr<FileOpener> opener = nullptr) override;
+	void CreateDirectoryRecursive(const string &directory, optional_ptr<FileOpener> opener = nullptr) override;
 	void RemoveDirectory(const string &directory, optional_ptr<FileOpener> opener = nullptr) override;
 	bool ListFiles(const string &directory, const std::function<void(const string &, bool)> &callback,
 	               FileOpener *opener = nullptr) override;
@@ -73,6 +75,8 @@ public:
 	FileMetadata Stats(FileHandle &handle) override;
 	bool FileExists(const string &filename, optional_ptr<FileOpener> opener = nullptr) override;
 	void RemoveFile(const string &filename, optional_ptr<FileOpener> opener = nullptr) override;
+	void TryRemoveFile(const string &filename, optional_ptr<FileOpener> opener = nullptr) override;
+	void RemoveFiles(const vector<string> &filenames, optional_ptr<FileOpener> opener = nullptr) override;
 	vector<OpenFileInfo> Glob(const string &path, FileOpener *opener = nullptr) override;
 	void Seek(FileHandle &handle, idx_t location) override;
 	void Reset(FileHandle &handle) override;
