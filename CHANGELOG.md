@@ -1,3 +1,15 @@
+# 0.5.0
+
+## Changed
+
+- Upgrade DuckDB, httpfs and extension-ci-tools to v1.5.2
+
+## Fixed
+
+- Add missing filesystem API ([#92])
+
+[#92]: https://github.com/dentiny/duckdb-filesystem-observability/pull/92
+
 # 0.4.8
 
 ## Changed
