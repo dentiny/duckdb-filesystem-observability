@@ -109,9 +109,9 @@ void ObservabilityFileSystem::CreateDirectory(const string &directory, optional_
 	ThrowIfDisabled();
 	internal_filesystem->CreateDirectory(directory, opener);
 }
-void ObservabilityFileSystem::CreateDirectoryRecursive(const string &directory, optional_ptr<FileOpener> opener) {
+void ObservabilityFileSystem::CreateDirectoriesRecursive(const string &path, optional_ptr<FileOpener> opener) {
 	ThrowIfDisabled();
-	internal_filesystem->CreateDirectoryRecursive(directory, opener);
+	internal_filesystem->CreateDirectoriesRecursive(path, opener);
 }
 void ObservabilityFileSystem::RemoveDirectory(const string &directory, optional_ptr<FileOpener> opener) {
 	ThrowIfDisabled();
@@ -132,14 +132,13 @@ void ObservabilityFileSystem::RemoveFile(const string &filename, optional_ptr<Fi
 	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kRemoveFile, filename);
 	internal_filesystem->RemoveFile(filename, opener);
 }
-void ObservabilityFileSystem::TryRemoveFile(const string &filename, optional_ptr<FileOpener> opener) {
+bool ObservabilityFileSystem::TryRemoveFile(const string &filename, optional_ptr<FileOpener> opener) {
 	ThrowIfDisabled();
 	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kRemoveFile, filename);
-	internal_filesystem->TryRemoveFile(filename, opener);
+	return internal_filesystem->TryRemoveFile(filename, opener);
 }
 void ObservabilityFileSystem::RemoveFiles(const vector<string> &filenames, optional_ptr<FileOpener> opener) {
 	ThrowIfDisabled();
-	const auto latency_guard = metrics_collector.RecordOperationStart(IoOperation::kRemoveFiles, filenames);
 	internal_filesystem->RemoveFiles(filenames, opener);
 }
 vector<OpenFileInfo> ObservabilityFileSystem::Glob(const string &path, FileOpener *opener) {
