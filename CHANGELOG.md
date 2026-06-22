@@ -1,3 +1,9 @@
+# 0.5.2
+
+## Changed
+
+- Upgrade DuckDB, httpfs and extension-ci-tools to v1.5.4
+
 # 0.5.1
 
 ## Changed
