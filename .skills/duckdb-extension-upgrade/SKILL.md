@@ -23,7 +23,6 @@ Track these as a checklist; do not skip ahead:
 - 6. Run tests (both must pass):
   + Extension C++ unit test: `./build/reldebug/extension/observefs/test/unittest/unittest_observefs`
   + SQL test: `make test_reldebug` (expands to `./build/reldebug/test/unittest "test/*"`)
-- 7. Bumpup version at community extension repo (i.e., `~/Desktop/community-extensions`)
 
 ## Reference: historical upgrade commits
 
