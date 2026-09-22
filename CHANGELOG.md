@@ -4,6 +4,10 @@
 
 - Add descriptions, examples, categories, and parameter names for all native ObserveFS SQL functions.
 
+## Fixed
+
+- Report the configured ObserveFS extension version correctly.
+
 # 0.5.3
 
 ## Changed
