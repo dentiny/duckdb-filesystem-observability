@@ -166,8 +166,8 @@ string ObservefsExtension::Name() {
 }
 
 string ObservefsExtension::Version() const {
-#ifdef EXT_VERSION_QUACK
-	return EXT_VERSION_QUACK;
+#ifdef EXT_VERSION_OBSERVEFS
+	return EXT_VERSION_OBSERVEFS;
 #else
 	return "";
 #endif
