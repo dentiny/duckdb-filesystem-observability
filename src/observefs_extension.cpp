@@ -7,14 +7,13 @@
 #include "duckdb/common/string_util.hpp"
 #include "duckdb/common/unique_ptr.hpp"
 #include "duckdb/storage/external_file_cache.hpp"
-#include "external_file_cache_query_function.hpp"
 #include "external_file_cache_stats_recorder.hpp"
 #include "fake_filesystem.hpp"
 #include "filesystem_ref_registry.hpp"
-#include "filesystem_status_query_function.hpp"
 #include "hffs.hpp"
 #include "httpfs_extension.hpp"
 #include "observefs_extension.hpp"
+#include "observefs_functions.hpp"
 #include "observefs_instance_state.hpp"
 #include "observability_filesystem.hpp"
 #include "s3fs.hpp"
@@ -25,74 +24,6 @@ namespace {
 
 // "httpfs" extension name.
 constexpr const char *HTTPFS_EXTENSION = "httpfs";
-// Indicates successful query.
-constexpr bool SUCCESS = true;
-
-// Get database instance from expression state.
-// Returned instance ownership lies in the given [`state`].
-DatabaseInstance &GetDatabaseInstance(ExpressionState &state) {
-	auto *executor = state.root.executor;
-	auto &client_context = executor->GetContext();
-	return *client_context.db.get();
-}
-
-// Clear observability data for all filesystems.
-void ClearObservabilityData(const DataChunk &args, ExpressionState &state, Vector &result) {
-	auto &duckdb_instance = GetDatabaseInstance(state);
-	auto &instance_state = GetInstanceStateOrThrow(duckdb_instance);
-	auto observefs_instances = instance_state.registry.GetAllObservabilityFs();
-	for (auto *cur_fs : observefs_instances) {
-		cur_fs->ClearObservabilityData();
-	}
-
-	result.Reference(Value(SUCCESS));
-}
-
-void GetProfileStats(const DataChunk &args, ExpressionState &state, Vector &result) {
-	string latest_stat;
-	auto &duckdb_instance = GetDatabaseInstance(state);
-	auto &instance_state = GetInstanceStateOrThrow(duckdb_instance);
-	const auto &observefs_instances = instance_state.registry.GetAllObservabilityFs();
-	for (auto *cur_filesystem : observefs_instances) {
-		latest_stat += StringUtil::Format("Current filesystem: %s\n", cur_filesystem->GetName());
-		const auto cur_stats_str = cur_filesystem->GetHumanReadableStats();
-		if (cur_stats_str.empty()) {
-			latest_stat += "No interested IO operations issued.";
-		} else {
-			latest_stat += cur_stats_str;
-		}
-		latest_stat += "\n";
-	}
-	result.Reference(Value(std::move(latest_stat)));
-}
-
-// Wrap the filesystem with extension cache filesystem.
-// Throw exception if the requested filesystem hasn't been registered into duckdb instance.
-void WrapFileSystem(const DataChunk &args, ExpressionState &state, Vector &result) {
-	D_ASSERT(args.ColumnCount() == 1);
-	const string filesystem_name = args.GetValue(/*col_idx=*/0, /*index=*/0).ToString();
-
-	// duckdb instance has a opener filesystem, which is a wrapper around virtual filesystem.
-	auto &duckdb_instance = GetDatabaseInstance(state);
-	auto &opener_filesystem = duckdb_instance.GetFileSystem().Cast<OpenerFileSystem>();
-	auto &vfs = opener_filesystem.GetFileSystem();
-	auto internal_filesystem = vfs.ExtractSubSystem(filesystem_name);
-	if (internal_filesystem == nullptr) {
-		throw InvalidInputException("Filesystem %s hasn't been registered yet!", filesystem_name);
-	}
-
-	auto observe_filesystem = make_uniq<ObservabilityFileSystem>(std::move(internal_filesystem), vfs);
-	auto &instance_state = GetInstanceStateOrThrow(duckdb_instance);
-	instance_state.registry.Register(observe_filesystem.get());
-	vfs.RegisterSubSystem(std::move(observe_filesystem));
-
-	result.Reference(Value(SUCCESS));
-}
-
-void ClearExternalFileCacheStatsRecord(DataChunk &args, ExpressionState &state, Vector &result) {
-	GetExternalFileCacheStatsRecorder().ClearCacheAccessRecord();
-	result.Reference(Value(SUCCESS));
-}
 
 // Extract or get httpfs filesystem.
 unique_ptr<FileSystem> ExtractOrCreateHttpfs(FileSystem &vfs) {
@@ -218,41 +149,7 @@ void LoadInternal(ExtensionLoader &loader) {
 	    "observefs_enable_external_file_cache_stats", "Whether to enable stats record for external file cache.",
 	    LogicalType {LogicalTypeId::BOOLEAN}, true, std::move(enable_external_file_cache_stats_callback));
 
-	// Register observability data cleanup function.
-	ScalarFunction clear_cache_function("observefs_clear", /*arguments=*/ {},
-	                                    /*return_type=*/LogicalType {LogicalTypeId::BOOLEAN}, ClearObservabilityData);
-	loader.RegisterFunction(clear_cache_function);
-
-	// Register profile collector metrics.
-	// A commonly-used SQL is `COPY (SELECT observefs_get_profile()) TO '/tmp/output.txt';`.
-	ScalarFunction get_profile_stats_function("observefs_get_profile", /*arguments=*/ {},
-	                                          /*return_type=*/LogicalType {LogicalTypeId::VARCHAR}, GetProfileStats);
-	loader.RegisterFunction(get_profile_stats_function);
-
-	// Register a function to list all existing filesystem instances, which is useful for wrapping.
-	loader.RegisterFunction(ListRegisteredFileSystemsQueryFunc());
-
-	// Register a function to wrap all duckdb-vfs-compatible filesystems. By default only httpfs filesystem instances
-	// are wrapped. Usage for the target filesystem can be used as normal.
-	//
-	// Example usage:
-	// D. LOAD azure;
-	// -- Wrap filesystem with its name.
-	// D. SELECT observefs_wrap_filesystem('AzureBlobStorageFileSystem');
-	ScalarFunction wrap_cache_filesystem_function("observefs_wrap_filesystem",
-	                                              /*arguments=*/ {LogicalTypeId::VARCHAR},
-	                                              /*return_type=*/LogicalTypeId::BOOLEAN, WrapFileSystem);
-	loader.RegisterFunction(wrap_cache_filesystem_function);
-
-	// Register a function to clear external file cache stats record.
-	ScalarFunction clear_external_file_cache_access_record_function("observefs_clear_external_file_cache_access_record",
-	                                                                /*arguments=*/ {},
-	                                                                /*return_type=*/LogicalTypeId::BOOLEAN,
-	                                                                ClearExternalFileCacheStatsRecord);
-	loader.RegisterFunction(clear_external_file_cache_access_record_function);
-
-	// Register external file cache access query function.
-	loader.RegisterFunction(ExternalFileCacheAccessQueryFunc());
+	RegisterObservefsFunctions(loader);
 
 	// Set extension description.
 	loader.SetDescription("Filesystem observability extension to record I/O metrics (i.e., latency, operation counts) "

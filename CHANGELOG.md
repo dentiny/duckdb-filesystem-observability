@@ -1,3 +1,9 @@
+# 0.5.4
+
+## Added
+
+- Add descriptions, examples, categories, and parameter names for all native ObserveFS SQL functions.
+
 # 0.5.3
 
 ## Changed

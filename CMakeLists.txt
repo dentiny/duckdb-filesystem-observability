@@ -42,6 +42,7 @@ set(EXTENSION_SOURCES
     src/numeric_utils.cpp
     src/observability_filesystem.cpp
     src/observefs_extension.cpp
+    src/observefs_functions.cpp
     src/observefs_instance_state.cpp
     src/operation_latency_collector.cpp
     src/operation_size_collector.cpp
