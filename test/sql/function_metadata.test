@@ -1,0 +1,31 @@
+# name: test/sql/function_metadata.test
+# description: test observefs function metadata
+# group: [sql]
+
+require observefs
+
+query III
+SELECT count(*),
+       count(*) FILTER (
+           WHERE description <> ''
+             AND len(examples) > 0
+             AND len(categories) > 0
+       ),
+       count(*) FILTER (
+           WHERE CASE
+                 WHEN function_name = 'observefs_wrap_filesystem'
+                 THEN parameters = ['filesystem_name']
+                 ELSE parameters = []
+                 END
+       )
+FROM duckdb_functions()
+WHERE function_name IN (
+    'observefs_clear',
+    'observefs_get_profile',
+    'observefs_list_registered_filesystems',
+    'observefs_wrap_filesystem',
+    'observefs_clear_external_file_cache_access_record',
+    'observefs_external_file_cache_access_record'
+);
+----
+6	6	6
