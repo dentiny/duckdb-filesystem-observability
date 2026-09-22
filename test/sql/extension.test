@@ -9,6 +9,11 @@ SELECT COUNT(*) FROM duckdb_extensions() WHERE extension_name = 'observefs';
 ----
 1
 
+query T
+SELECT extension_version FROM duckdb_extensions() WHERE extension_name = 'observefs';
+----
+0.5.4
+
 query I
 SELECT * FROM observefs_list_registered_filesystems();
 ----
