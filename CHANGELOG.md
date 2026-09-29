@@ -2,8 +2,7 @@
 
 ## Changed
 
-- Update DuckDB and extension-ci-tools to `v1.5.6`.
-- Align duckdb-httpfs with the commit pinned by DuckDB `v1.5.6` in `.github/config/extensions/httpfs.cmake`.
+- Update DuckDB and extension-ci-tools to `v1.5.6` and align httpfs with DuckDB core.
 
 ## Added
 
