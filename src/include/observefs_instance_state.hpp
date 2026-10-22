@@ -12,6 +12,8 @@
 
 namespace duckdb {
 
+class DatabaseInstance;
+
 //===--------------------------------------------------------------------===//
 // Main per-instance state container
 // Inherits from ObjectCacheEntry for automatic cleanup when DatabaseInstance is destroyed

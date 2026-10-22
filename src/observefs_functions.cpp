@@ -36,7 +36,7 @@ void ClearObservabilityData(const DataChunk &args, ExpressionState &state, Vecto
 		cur_fs->ClearObservabilityData();
 	}
 
-	result.Reference(Value(SUCCESS), args.size());
+	result.Reference(Value(SUCCESS), count_t(args.size()));
 }
 
 void GetProfileStats(const DataChunk &args, ExpressionState &state, Vector &result) {
@@ -54,7 +54,7 @@ void GetProfileStats(const DataChunk &args, ExpressionState &state, Vector &resu
 		}
 		latest_stat += "\n";
 	}
-	result.Reference(Value(std::move(latest_stat)), args.size());
+	result.Reference(Value(std::move(latest_stat)), count_t(args.size()));
 }
 
 void WrapFileSystem(const DataChunk &args, ExpressionState &state, Vector &result) {
@@ -74,12 +74,12 @@ void WrapFileSystem(const DataChunk &args, ExpressionState &state, Vector &resul
 	instance_state.registry.Register(observe_filesystem.get());
 	vfs.RegisterSubSystem(std::move(observe_filesystem));
 
-	result.Reference(Value(SUCCESS), args.size());
+	result.Reference(Value(SUCCESS), count_t(args.size()));
 }
 
 void ClearExternalFileCacheStatsRecord(DataChunk &args, ExpressionState &state, Vector &result) {
 	GetExternalFileCacheStatsRecorder().ClearCacheAccessRecord();
-	result.Reference(Value(SUCCESS), args.size());
+	result.Reference(Value(SUCCESS), count_t(args.size()));
 }
 
 FunctionDescription GetFunctionDescription(vector<LogicalType> parameter_types, vector<string> parameter_names,
@@ -103,6 +103,7 @@ void SetParameterNames(FunctionSignature &signature, const FunctionDescription &
 
 void RegisterScalarFunction(ExtensionLoader &loader, ScalarFunction function, FunctionDescription description) {
 	SetParameterNames(function.GetSignature(), description);
+	function.SetFallible();
 	CreateScalarFunctionInfo info(std::move(function));
 	info.descriptions.emplace_back(std::move(description));
 	loader.RegisterFunction(std::move(info));
