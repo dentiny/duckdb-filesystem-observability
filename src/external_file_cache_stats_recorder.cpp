@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-#include "duckdb/storage/external_file_cache.hpp"
+#include "duckdb/storage/external_file_cache/external_file_cache.hpp"
 
 namespace duckdb {
 
@@ -22,16 +22,16 @@ unique_ptr<ExternalFileCacheStatsRecorder> g_stats_recorder;
 } // namespace
 
 CacheAccessRecord ExternalFileCacheStatsRecorder::GetCacheAccessRecord() const {
-	std::lock_guard<std::mutex> lck(mu);
+	annotated_lock_guard<annotated_mutex> lck(mu);
 	return cache_access_record;
 }
 
 void ExternalFileCacheStatsRecorder::Enable() {
-	std::lock_guard<std::mutex> lck(mu);
+	annotated_lock_guard<annotated_mutex> lck(mu);
 	enabled = true;
 }
 void ExternalFileCacheStatsRecorder::Disable() {
-	std::lock_guard<std::mutex> lck(mu);
+	annotated_lock_guard<annotated_mutex> lck(mu);
 	enabled = false;
 }
 void ExternalFileCacheStatsRecorder::AccessRead(const string &filepath, idx_t start_offset, idx_t bytes_to_read) {
@@ -41,7 +41,7 @@ void ExternalFileCacheStatsRecorder::AccessRead(const string &filepath, idx_t st
 	cur_cache_file_info.location = start_offset;
 	cur_cache_file_info.loaded = false; // Fill in "false" for binary search.
 
-	std::lock_guard<std::mutex> lck(mu);
+	annotated_lock_guard<annotated_mutex> lck(mu);
 	if (!enabled || !external_file_cache->IsEnabled()) {
 		return;
 	}
@@ -114,14 +114,14 @@ void ExternalFileCacheStatsRecorder::UpdateExternalFileCacheWithLock() {
 }
 
 void ExternalFileCacheStatsRecorder::ClearCacheAccessRecord() {
-	std::lock_guard<std::mutex> lck(mu);
+	annotated_lock_guard<annotated_mutex> lck(mu);
 	cache_access_record.hit_count = 0;
 	cache_access_record.miss_count = 0;
 	cache_access_record.partial_hit_count = 0;
 }
 
 void ExternalFileCacheStatsRecorder::ResetExternalFileCache(ExternalFileCache &cache) {
-	std::lock_guard<std::mutex> lck(mu);
+	annotated_lock_guard<annotated_mutex> lck(mu);
 	external_file_cache = &cache;
 }
 

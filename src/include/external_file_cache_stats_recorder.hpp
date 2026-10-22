@@ -4,7 +4,7 @@
 
 #pragma once
 
-#include <mutex>
+#include "duckdb/common/mutex.hpp"
 
 #include "duckdb/common/string.hpp"
 #include "duckdb/common/typedefs.hpp"
@@ -50,22 +50,22 @@ public:
 
 private:
 	// Update cache access.
-	void UpdateCacheAccessRecordWithLock(const CachedFileInformation &cache_file_info);
+	void UpdateCacheAccessRecordWithLock(const CachedFileInformation &cache_file_info) DUCKDB_REQUIRES(mu);
 
 	// Load cache information from external file cache.
-	void UpdateExternalFileCacheWithLock();
+	void UpdateExternalFileCacheWithLock() DUCKDB_REQUIRES(mu);
 
-	ExternalFileCache *external_file_cache = nullptr;
+	ExternalFileCache *external_file_cache DUCKDB_GUARDED_BY(mu) = nullptr;
 	// Currently cached blocks in external file cache.
-	vector<CachedFileInformation> cache_blocks;
+	vector<CachedFileInformation> cache_blocks DUCKDB_GUARDED_BY(mu);
 	// Used to decide whether stats recorder should load fresh cache information.
-	idx_t last_load_iteration = 0;
-	idx_t cur_load_iteration = 0;
+	idx_t last_load_iteration DUCKDB_GUARDED_BY(mu) = 0;
+	idx_t cur_load_iteration DUCKDB_GUARDED_BY(mu) = 0;
 	// Cache access record.
-	CacheAccessRecord cache_access_record;
+	CacheAccessRecord cache_access_record DUCKDB_GUARDED_BY(mu);
 	// Whether stats record is enabled.
-	bool enabled = true;
-	mutable std::mutex mu;
+	bool enabled DUCKDB_GUARDED_BY(mu) = true;
+	mutable annotated_mutex mu;
 };
 
 // Get global stats recorder.

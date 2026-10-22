@@ -19,7 +19,6 @@
 //
 // In theory, the best implementation is `absl::NoDestructor<T>`.
 // Reference: https://github.com/abseil/abseil-cpp/blob/master/absl/base/no_destructor.h
-// But C++11 doesn't support `std::launder` so we have to switch `new`-allocation method, instead of `placement new`.
 //
 // Example usage:
 // - Initialization: NoDestructor<T> obj{...};
@@ -39,8 +38,7 @@ public:
 	// Forwards arguments to the T's constructor: calls T(args...).
 	template <typename... Ts,
 	          // Disable this overload when it might collide with copy/move.
-	          typename std::enable_if<
-	              !std::is_same<void(typename std::decay<Ts>::type &...), void(NoDestructor &)>::value, int>::type = 0>
+	          std::enable_if_t<!std::is_same_v<void(std::decay_t<Ts> &...), void(NoDestructor &)>, int> = 0>
 	explicit constexpr NoDestructor(Ts &&...args) : impl_(std::forward<Ts>(args)...) {
 	}
 
@@ -99,17 +97,17 @@ private:
 			new (&space_) T(std::forward<Args>(args)...);
 		}
 		const T *get() const {
-			return reinterpret_cast<const T *>(&space_);
+			return std::launder(reinterpret_cast<const T *>(&space_));
 		}
 		T *get() {
-			return reinterpret_cast<T *>(&space_);
+			return std::launder(reinterpret_cast<T *>(&space_));
 		}
 
 	private:
 		alignas(T) unsigned char space_[sizeof(T)];
 	};
 
-	typename std::conditional<std::is_trivially_destructible<T>::value, DirectImpl, PlacementImpl>::type impl_;
+	std::conditional_t<std::is_trivially_destructible_v<T>, DirectImpl, PlacementImpl> impl_;
 };
 
 } // namespace duckdb

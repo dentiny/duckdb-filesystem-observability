@@ -5,7 +5,7 @@
 namespace duckdb {
 
 void QuantileEstimator::Add(float x) {
-	std::lock_guard<std::mutex> lck(mu);
+	annotated_lock_guard<annotated_mutex> lck(mu);
 	if (!estimators.empty()) {
 		for (auto &e : estimators) {
 			e.Add(x);
@@ -27,35 +27,35 @@ void QuantileEstimator::Add(float x) {
 }
 
 float QuantileEstimator::p50() const {
-	std::lock_guard<std::mutex> lck(mu);
+	annotated_lock_guard<annotated_mutex> lck(mu);
 	if (estimators.empty()) {
 		return quantile_lite.p50();
 	}
 	return estimators[0].Get();
 }
 float QuantileEstimator::p75() const {
-	std::lock_guard<std::mutex> lck(mu);
+	annotated_lock_guard<annotated_mutex> lck(mu);
 	if (estimators.empty()) {
 		return quantile_lite.p75();
 	}
 	return estimators[1].Get();
 }
 float QuantileEstimator::p90() const {
-	std::lock_guard<std::mutex> lck(mu);
+	annotated_lock_guard<annotated_mutex> lck(mu);
 	if (estimators.empty()) {
 		return quantile_lite.p90();
 	}
 	return estimators[2].Get();
 }
 float QuantileEstimator::p95() const {
-	std::lock_guard<std::mutex> lck(mu);
+	annotated_lock_guard<annotated_mutex> lck(mu);
 	if (estimators.empty()) {
 		return quantile_lite.p95();
 	}
 	return estimators[3].Get();
 }
 float QuantileEstimator::p99() const {
-	std::lock_guard<std::mutex> lck(mu);
+	annotated_lock_guard<annotated_mutex> lck(mu);
 	if (estimators.empty()) {
 		return quantile_lite.p99();
 	}

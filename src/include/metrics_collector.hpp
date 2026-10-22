@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <mutex>
+#include "duckdb/common/mutex.hpp"
 
 #include "duckdb/common/string.hpp"
 #include "duckdb/common/unordered_map.hpp"
@@ -49,15 +49,15 @@ public:
 	void Reset();
 
 private:
-	LatencyGuardWrapper RecordOperationStartWithLock(IoOperation io_oper, const string &filepath);
+	LatencyGuardWrapper RecordOperationStartWithLock(IoOperation io_oper, const string &filepath) DUCKDB_REQUIRES(mu);
 
 	// Overall latency histogram.
-	std::mutex mu;
-	unique_ptr<OperationLatencyCollector> overall_latency_collector;
+	annotated_mutex mu;
+	unique_ptr<OperationLatencyCollector> overall_latency_collector DUCKDB_GUARDED_BY(mu);
 	// Bucket-wise latency histogram.
-	unordered_map<string, unique_ptr<OperationLatencyCollector>> bucket_latency_collector;
+	unordered_map<string, unique_ptr<OperationLatencyCollector>> bucket_latency_collector DUCKDB_GUARDED_BY(mu);
 	// Operation size collector.
-	unique_ptr<OperationSizeCollector> operation_size_collector;
+	unique_ptr<OperationSizeCollector> operation_size_collector DUCKDB_GUARDED_BY(mu);
 };
 
 } // namespace duckdb

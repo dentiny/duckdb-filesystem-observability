@@ -1,6 +1,8 @@
 #include "observefs_functions.hpp"
 
 #include "duckdb/common/opener_file_system.hpp"
+#include "duckdb/main/client_context.hpp"
+#include "duckdb/main/database.hpp"
 #include "duckdb/common/types/data_chunk.hpp"
 #include "duckdb/common/types/value.hpp"
 #include "duckdb/common/vector.hpp"
@@ -22,9 +24,7 @@ namespace {
 constexpr bool SUCCESS = true;
 
 DatabaseInstance &GetDatabaseInstance(ExpressionState &state) {
-	auto *executor = state.root.executor;
-	auto &client_context = executor->GetContext();
-	return *client_context.db.get();
+	return *state.GetContext().db;
 }
 
 void ClearObservabilityData(const DataChunk &args, ExpressionState &state, Vector &result) {
@@ -35,7 +35,7 @@ void ClearObservabilityData(const DataChunk &args, ExpressionState &state, Vecto
 		cur_fs->ClearObservabilityData();
 	}
 
-	result.Reference(Value(SUCCESS));
+	result.Reference(Value(SUCCESS), args.size());
 }
 
 void GetProfileStats(const DataChunk &args, ExpressionState &state, Vector &result) {
@@ -53,7 +53,7 @@ void GetProfileStats(const DataChunk &args, ExpressionState &state, Vector &resu
 		}
 		latest_stat += "\n";
 	}
-	result.Reference(Value(std::move(latest_stat)));
+	result.Reference(Value(std::move(latest_stat)), args.size());
 }
 
 void WrapFileSystem(const DataChunk &args, ExpressionState &state, Vector &result) {
@@ -73,12 +73,12 @@ void WrapFileSystem(const DataChunk &args, ExpressionState &state, Vector &resul
 	instance_state.registry.Register(observe_filesystem.get());
 	vfs.RegisterSubSystem(std::move(observe_filesystem));
 
-	result.Reference(Value(SUCCESS));
+	result.Reference(Value(SUCCESS), args.size());
 }
 
 void ClearExternalFileCacheStatsRecord(DataChunk &args, ExpressionState &state, Vector &result) {
 	GetExternalFileCacheStatsRecorder().ClearCacheAccessRecord();
-	result.Reference(Value(SUCCESS));
+	result.Reference(Value(SUCCESS), args.size());
 }
 
 FunctionDescription GetFunctionDescription(vector<LogicalType> parameter_types, vector<string> parameter_names,

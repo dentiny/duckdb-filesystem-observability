@@ -13,7 +13,7 @@ void ObservabilityFsRefRegistry::Register(ObservabilityFileSystem *fs) {
 		throw InvalidInputException("Cannot wrap an observabibility filesystem %s!", fs->GetName());
 	}
 
-	const std::lock_guard<std::mutex> lck(mu);
+	const annotated_lock_guard<annotated_mutex> lck(mu);
 
 	// Validate filesystem hasn't been registered before.
 	for (const auto &already_registered : observability_filesystems) {
@@ -28,12 +28,12 @@ void ObservabilityFsRefRegistry::Register(ObservabilityFileSystem *fs) {
 }
 
 void ObservabilityFsRefRegistry::Reset() {
-	const std::lock_guard<std::mutex> lck(mu);
+	const annotated_lock_guard<annotated_mutex> lck(mu);
 	observability_filesystems.clear();
 }
 
 vector<ObservabilityFileSystem *> ObservabilityFsRefRegistry::GetAllObservabilityFs() const {
-	const std::lock_guard<std::mutex> lck(mu);
+	const annotated_lock_guard<annotated_mutex> lck(mu);
 	return observability_filesystems;
 }
 

@@ -1,5 +1,6 @@
 #include "external_file_cache_query_function.hpp"
 
+#include "duckdb/common/identifier.hpp"
 #include "external_file_cache_stats_recorder.hpp"
 
 namespace duckdb {
@@ -14,7 +15,7 @@ struct CacheAccessData : public GlobalTableFunctionState {
 };
 
 unique_ptr<FunctionData> ExternalFileCacheAccessBind(ClientContext &context, TableFunctionBindInput &input,
-                                                     vector<LogicalType> &return_types, vector<string> &names) {
+                                                     vector<LogicalType> &return_types, vector<Identifier> &names) {
 	D_ASSERT(return_types.empty());
 	D_ASSERT(names.empty());
 
@@ -38,7 +39,7 @@ unique_ptr<GlobalTableFunctionState> ExternalFileCacheAccessInit(ClientContext &
 	auto result = make_uniq<CacheAccessData>();
 	auto &external_file_cache_stats_recorder = GetExternalFileCacheStatsRecorder();
 	result->cache_access_record = external_file_cache_stats_recorder.GetCacheAccessRecord();
-	return std::move(result);
+	return result;
 }
 
 void ExternalFileCacheAccessFunc(ClientContext &context, TableFunctionInput &data_p, DataChunk &output) {

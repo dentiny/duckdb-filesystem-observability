@@ -1,15 +1,12 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.5...3.29)
 
 # Set extension name here
 set(TARGET_NAME observefs)
 
-set(CMAKE_CXX_STANDARD 14)
-
-if(UNIX OR APPLE)
-  set(CMAKE_CXX_FLAGS
-      "${CMAKE_CXX_FLAGS} -Wno-write-strings -Wno-c++17-extensions -Wno-c++20-extensions -Wunused-variable -Wunused-function -Wunused-but-set-variable"
-  )
+if(NOT CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD LESS 17)
+  set(CMAKE_CXX_STANDARD 17)
 endif()
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Override DuckDB encryption library, mimics httpfs extension behavior.
 if(NOT EMSCRIPTEN)
@@ -37,7 +34,6 @@ set(EXTENSION_SOURCES
     src/filesystem_ref_registry.cpp
     src/filesystem_status_query_function.cpp
     src/histogram.cpp
-    src/io_operation.cpp
     src/metrics_collector.cpp
     src/numeric_utils.cpp
     src/observability_filesystem.cpp
@@ -53,16 +49,28 @@ set(EXTENSION_SOURCES
     src/time_utils.cpp
     duckdb-httpfs/src/create_secret_functions.cpp
     duckdb-httpfs/src/crypto.cpp
-    duckdb-httpfs/src/hash_functions.cpp
     duckdb-httpfs/src/hffs.cpp
-    duckdb-httpfs/src/http_state.cpp
-    duckdb-httpfs/src/httpfs.cpp
-    duckdb-httpfs/src/httpfs_connection_caching.cpp
-    duckdb-httpfs/src/httpfs_curl_client.cpp
     duckdb-httpfs/src/httpfs_extension.cpp
-    duckdb-httpfs/src/httpfs_httplib_client.cpp
-    duckdb-httpfs/src/s3fs.cpp
-    duckdb-httpfs/src/s3_multi_part_upload.cpp)
+    duckdb-httpfs/src/http/http_request.cpp
+    duckdb-httpfs/src/http/http_request_session.cpp
+    duckdb-httpfs/src/http/http_settings.cpp
+    duckdb-httpfs/src/http/http_state.cpp
+    duckdb-httpfs/src/http/httpfs.cpp
+    duckdb-httpfs/src/http/httpfs_certificates.cpp
+    duckdb-httpfs/src/http/httpfs_curl_client.cpp
+    duckdb-httpfs/src/http/httpfs_httplib_client.cpp
+    duckdb-httpfs/src/http/httpfs_transport.cpp
+    duckdb-httpfs/src/s3/s3_auth.cpp
+    duckdb-httpfs/src/s3/s3_delete.cpp
+    duckdb-httpfs/src/s3/s3_endpoint.cpp
+    duckdb-httpfs/src/s3/s3_list.cpp
+    duckdb-httpfs/src/s3/s3_provider.cpp
+    duckdb-httpfs/src/s3/s3_request.cpp
+    duckdb-httpfs/src/s3/s3_settings.cpp
+    duckdb-httpfs/src/s3/s3_upload_session.cpp
+    duckdb-httpfs/src/s3/s3_url.cpp
+    duckdb-httpfs/src/s3/s3_xml_response.cpp
+    duckdb-httpfs/src/s3/s3fs.cpp)
 
 build_static_extension(${TARGET_NAME} ${EXTENSION_SOURCES})
 build_loadable_extension(${TARGET_NAME} " " ${EXTENSION_SOURCES})
@@ -72,6 +80,21 @@ target_link_libraries(${EXTENSION_NAME} OpenSSL::SSL OpenSSL::Crypto
                       CURL::libcurl)
 target_link_libraries(${LOADABLE_EXTENSION_NAME} OpenSSL::SSL OpenSSL::Crypto
                       CURL::libcurl)
+
+if(APPLE)
+  find_library(COREFOUNDATION_FRAMEWORK CoreFoundation REQUIRED)
+  find_library(SECURITY_FRAMEWORK Security REQUIRED)
+  target_link_libraries(${EXTENSION_NAME} ${COREFOUNDATION_FRAMEWORK}
+                        ${SECURITY_FRAMEWORK})
+  target_link_libraries(${LOADABLE_EXTENSION_NAME} ${COREFOUNDATION_FRAMEWORK}
+                        ${SECURITY_FRAMEWORK})
+endif()
+
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  target_compile_options(${EXTENSION_NAME} PRIVATE -Werror=thread-safety)
+  target_compile_options(${LOADABLE_EXTENSION_NAME}
+                         PRIVATE -Werror=thread-safety)
+endif()
 
 # Link Windows Cryptography API library for certificate loading on Windows
 if(MINGW OR WIN32)
@@ -86,6 +109,6 @@ install(
   ARCHIVE DESTINATION "${INSTALL_LIB_DIR}")
 
 # Unit tests, disabled on Windows due to linking issues.
-if(NOT WIN32)
+if(BUILD_UNITTESTS AND NOT WIN32)
   add_subdirectory(test/unittest)
 endif()

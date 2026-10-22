@@ -1,7 +1,7 @@
 #pragma once
 
 #include <array>
-#include <mutex>
+#include "duckdb/common/mutex.hpp"
 #include <utility>
 
 #include "duckdb/common/string.hpp"
@@ -32,7 +32,7 @@ public:
 
 private:
 	// Initialize P2 quantile.
-	void InitializeP2QuantileWithLock();
+	void InitializeP2QuantileWithLock() DUCKDB_REQUIRES(mu);
 
 	// Metrics name and unit.
 	string quantile_name;
@@ -40,11 +40,11 @@ private:
 
 	// Used to trigger large-scale data point ingestion.
 	static constexpr size_t LARGE_SCALE_DATA_POINT_THRESHOLD = 512;
-	mutable std::mutex mu;
+	mutable annotated_mutex mu;
 	// Used for small scale data points, where P² algorithm doesn't work well and memory footprint is acceptable.
-	QuantileLite quantile_lite;
+	QuantileLite quantile_lite DUCKDB_GUARDED_BY(mu);
 	// Used for large scale data points, where P² algorithm generates precise-enough quantile result.
-	vector<P2Quantile> estimators;
+	vector<P2Quantile> estimators DUCKDB_GUARDED_BY(mu);
 };
 
 } // namespace duckdb

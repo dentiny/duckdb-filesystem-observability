@@ -3,7 +3,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
-#include <mutex>
+#include "duckdb/common/mutex.hpp"
 
 #include "duckdb/common/helper.hpp"
 #include "duckdb/common/string.hpp"
@@ -67,8 +67,8 @@ private:
 	void RecordOperationEnd(IoOperation io_oper, int64_t latency_millisec);
 
 	// Only records finished operations, which maps from io operation to histogram.
-	std::mutex latency_collector_mu;
-	std::array<LatencyStatsCollector, kIoOperationCount> latency_collector;
+	annotated_mutex latency_collector_mu;
+	std::array<LatencyStatsCollector, kIoOperationCount> latency_collector DUCKDB_GUARDED_BY(latency_collector_mu);
 };
 
 } // namespace duckdb

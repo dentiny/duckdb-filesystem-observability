@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <mutex>
+#include "duckdb/common/mutex.hpp"
 
 #include "duckdb/common/vector.hpp"
 
@@ -24,9 +24,9 @@ public:
 	vector<ObservabilityFileSystem *> GetAllObservabilityFs() const;
 
 private:
-	mutable std::mutex mu;
+	mutable annotated_mutex mu;
 	// The ownership lies in db instance.
-	vector<ObservabilityFileSystem *> observability_filesystems;
+	vector<ObservabilityFileSystem *> observability_filesystems DUCKDB_GUARDED_BY(mu);
 };
 
 } // namespace duckdb

@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <mutex>
+#include <string_view>
 
 #include "duckdb/common/shared_ptr.hpp"
 #include "duckdb/common/string.hpp"
@@ -18,8 +18,8 @@ namespace duckdb {
 //===--------------------------------------------------------------------===//
 class ObservefsInstanceState : public ObjectCacheEntry {
 public:
-	static constexpr const char *OBJECT_TYPE = "ObservefsInstanceState";
-	static constexpr const char *CACHE_KEY = "observefs_instance_state";
+	static constexpr std::string_view OBJECT_TYPE = "ObservefsInstanceState";
+	static constexpr std::string_view CACHE_KEY = "observefs_instance_state";
 
 	ObservabilityFsRefRegistry registry;
 
@@ -27,11 +27,11 @@ public:
 
 	// ObjectCacheEntry interface
 	string GetObjectType() override {
-		return OBJECT_TYPE;
+		return string(OBJECT_TYPE);
 	}
 
 	static string ObjectType() {
-		return OBJECT_TYPE;
+		return string(OBJECT_TYPE);
 	}
 
 	optional_idx GetEstimatedCacheMemory() const override {

@@ -1,29 +1,37 @@
 #define DUCKDB_EXTENSION_MAIN
 
+#include <string_view>
+
 #include "duckdb.hpp"
 #include "duckdb/common/exception.hpp"
 #include "duckdb/common/helper.hpp"
 #include "duckdb/common/opener_file_system.hpp"
 #include "duckdb/common/string_util.hpp"
 #include "duckdb/common/unique_ptr.hpp"
-#include "duckdb/storage/external_file_cache.hpp"
+#include "duckdb/common/identifier.hpp"
+#include "duckdb/main/extension/extension_loader.hpp"
+#include "duckdb/main/extension_load_options.hpp"
+#include "duckdb/main/extension_manager.hpp"
+#include "duckdb/storage/buffer_manager.hpp"
+#include "duckdb/storage/external_file_cache/external_file_cache.hpp"
 #include "external_file_cache_stats_recorder.hpp"
 #include "fake_filesystem.hpp"
 #include "filesystem_ref_registry.hpp"
 #include "hffs.hpp"
+#include "http/httpfs.hpp"
 #include "httpfs_extension.hpp"
 #include "observefs_extension.hpp"
 #include "observefs_functions.hpp"
 #include "observefs_instance_state.hpp"
 #include "observability_filesystem.hpp"
-#include "s3fs.hpp"
+#include "s3/s3fs.hpp"
 
 namespace duckdb {
 
 namespace {
 
 // "httpfs" extension name.
-constexpr const char *HTTPFS_EXTENSION = "httpfs";
+constexpr std::string_view HTTPFS_EXTENSION = "httpfs";
 
 // Extract or get httpfs filesystem.
 unique_ptr<FileSystem> ExtractOrCreateHttpfs(FileSystem &vfs) {
@@ -72,9 +80,7 @@ unique_ptr<FileSystem> ExtractOrCreateS3fs(FileSystem &vfs, DatabaseInstance &in
 
 // Whether `httpfs` extension has already been loaded.
 bool IsHttpfsExtensionLoaded(DatabaseInstance &db_instance) {
-	auto &extension_manager = db_instance.GetExtensionManager();
-	const auto loaded_extensions = extension_manager.GetExtensions();
-	return std::find(loaded_extensions.begin(), loaded_extensions.end(), HTTPFS_EXTENSION) != loaded_extensions.end();
+	return ExtensionManager::Get(db_instance).ExtensionIsLoaded(string(HTTPFS_EXTENSION));
 }
 
 // Ensure httpfs extension is loaded, loading it if necessary
@@ -88,7 +94,7 @@ void EnsureHttpfsExtensionLoaded(ExtensionLoader &loader, DatabaseInstance &inst
 
 	// Register into extension manager to keep compatibility as httpfs.
 	auto &extension_manager = ExtensionManager::Get(instance);
-	auto extension_active_load = extension_manager.BeginLoad(HTTPFS_EXTENSION);
+	auto extension_active_load = extension_manager.BeginLoad(ExtensionLoadOptions {string(HTTPFS_EXTENSION)});
 	// Manually fill in the extension install info to finalize extension load.
 	ExtensionInstallInfo extension_install_info;
 	extension_install_info.mode = ExtensionInstallMode::UNKNOWN;
@@ -145,9 +151,10 @@ void LoadInternal(ExtensionLoader &loader) {
 			GetExternalFileCacheStatsRecorder().Disable();
 		}
 	};
-	config.AddExtensionOption(
-	    "observefs_enable_external_file_cache_stats", "Whether to enable stats record for external file cache.",
-	    LogicalType {LogicalTypeId::BOOLEAN}, true, std::move(enable_external_file_cache_stats_callback));
+	config.AddExtensionOption(Identifier {"observefs_enable_external_file_cache_stats"},
+	                          "Whether to enable stats record for external file cache.",
+	                          LogicalType {LogicalTypeId::BOOLEAN}, true,
+	                          std::move(enable_external_file_cache_stats_callback));
 
 	RegisterObservefsFunctions(loader);
 
