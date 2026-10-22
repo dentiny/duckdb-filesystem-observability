@@ -1,3 +1,14 @@
+# 0.6.0
+
+## Changed
+
+- Upgrade DuckDB to v2.0.0, and update httpfs and extension-ci-tools to current main revisions.
+- Require C++17 and use identifiers for SQL output names and extension settings.
+- Use DuckDB annotated mutexes for collector state and C++17 string views and type traits.
+- Adapt filesystem registration, extension loading, scalar result, and table-output APIs to DuckDB v2.
+- Preserve documented SQL parameter names through function signatures while keeping positional-only binding.
+- Follow the current httpfs source layout and link native certificate frameworks on macOS.
+
 # 0.5.4
 
 ## Changed

@@ -1,5 +1,6 @@
 #include "external_file_cache_query_function.hpp"
 
+#include "duckdb/common/identifier.hpp"
 #include "external_file_cache_stats_recorder.hpp"
 
 namespace duckdb {
@@ -14,7 +15,7 @@ struct CacheAccessData : public GlobalTableFunctionState {
 };
 
 unique_ptr<FunctionData> ExternalFileCacheAccessBind(ClientContext &context, TableFunctionBindInput &input,
-                                                     vector<LogicalType> &return_types, vector<string> &names) {
+                                                     vector<LogicalType> &return_types, vector<Identifier> &names) {
 	D_ASSERT(return_types.empty());
 	D_ASSERT(names.empty());
 
@@ -38,7 +39,7 @@ unique_ptr<GlobalTableFunctionState> ExternalFileCacheAccessInit(ClientContext &
 	auto result = make_uniq<CacheAccessData>();
 	auto &external_file_cache_stats_recorder = GetExternalFileCacheStatsRecorder();
 	result->cache_access_record = external_file_cache_stats_recorder.GetCacheAccessRecord();
-	return std::move(result);
+	return result;
 }
 
 void ExternalFileCacheAccessFunc(ClientContext &context, TableFunctionInput &data_p, DataChunk &output) {
@@ -51,10 +52,10 @@ void ExternalFileCacheAccessFunc(ClientContext &context, TableFunctionInput &dat
 	data.emitted = true;
 
 	// Start filling in the result buffer.
-	output.SetValue(/*col_idx=*/0, /*index=*/0, Value::UBIGINT(data.cache_access_record.hit_count));
-	output.SetValue(/*col_idx=*/1, /*index=*/0, Value::UBIGINT(data.cache_access_record.miss_count));
-	output.SetValue(/*col_idx=*/2, /*index=*/0, Value::UBIGINT(data.cache_access_record.partial_hit_count));
-	output.SetCardinality(/*count=*/1);
+	output.data[0].Append(Value::UBIGINT(data.cache_access_record.hit_count));
+	output.data[1].Append(Value::UBIGINT(data.cache_access_record.miss_count));
+	output.data[2].Append(Value::UBIGINT(data.cache_access_record.partial_hit_count));
+	output.CheckCardinality(1);
 }
 } // namespace
 

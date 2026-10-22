@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <mutex>
+#include "duckdb/common/mutex.hpp"
 
 #include "duckdb/common/helper.hpp"
 #include "duckdb/common/string.hpp"
@@ -21,8 +21,8 @@ public:
 	string GetHumanReadableStats();
 
 private:
-	std::mutex mu;
-	std::array<unique_ptr<Histogram>, kIoOperationCount> request_size_histograms;
+	annotated_mutex mu;
+	std::array<unique_ptr<Histogram>, kIoOperationCount> request_size_histograms DUCKDB_GUARDED_BY(mu);
 };
 
 } // namespace duckdb

@@ -7,6 +7,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <string_view>
 
 namespace duckdb {
 
@@ -28,6 +29,7 @@ enum class IoOperation {
 constexpr size_t kIoOperationCount = static_cast<size_t>(IoOperation::kUnknown);
 
 // Operation names, indexed by operation enums.
-extern const std::array<const char *, kIoOperationCount> OPER_NAMES;
+inline constexpr std::array<std::string_view, kIoOperationCount> OPER_NAMES = {
+    "open", "read", "write", "list", "glob", "get_file_size", "file_sync", "remove_file"};
 
 } // namespace duckdb

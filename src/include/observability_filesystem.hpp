@@ -3,6 +3,7 @@
 #pragma once
 
 #include "duckdb/common/exception.hpp"
+#include "duckdb/common/compressed_file_system.hpp"
 #include "duckdb/common/file_system.hpp"
 #include "duckdb/common/open_file_info.hpp"
 #include "duckdb/common/shared_ptr.hpp"
@@ -11,7 +12,6 @@
 #include "metrics_collector.hpp"
 
 #include <functional>
-#include <mutex>
 #include <tuple>
 
 namespace duckdb {
@@ -108,8 +108,8 @@ public:
 	void RegisterSubSystem(unique_ptr<FileSystem> sub_fs) override {
 		internal_filesystem->RegisterSubSystem(std::move(sub_fs));
 	}
-	void RegisterSubSystem(FileCompressionType compression_type, unique_ptr<FileSystem> fs) override {
-		internal_filesystem->RegisterSubSystem(compression_type, std::move(fs));
+	void RegisterCompressionFilesystem(unique_ptr<CompressedFileSystem> fs) override {
+		internal_filesystem->RegisterCompressionFilesystem(std::move(fs));
 	}
 	void UnregisterSubSystem(const string &name) override {
 		internal_filesystem->UnregisterSubSystem(name);

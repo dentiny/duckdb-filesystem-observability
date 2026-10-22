@@ -1,5 +1,6 @@
 #include "filesystem_status_query_function.hpp"
 
+#include "duckdb/common/identifier.hpp"
 #include <algorithm>
 
 #include "duckdb/common/opener_file_system.hpp"
@@ -26,7 +27,7 @@ struct ListFileSystemData : public GlobalTableFunctionState {
 };
 
 unique_ptr<FunctionData> ListFileSystemQueryFuncBind(ClientContext &context, TableFunctionBindInput &input,
-                                                     vector<LogicalType> &return_types, vector<string> &names) {
+                                                     vector<LogicalType> &return_types, vector<Identifier> &names) {
 	D_ASSERT(return_types.empty());
 	D_ASSERT(names.empty());
 
@@ -54,7 +55,7 @@ unique_ptr<GlobalTableFunctionState> ListFileSystemQueryFuncInit(ClientContext &
 	std::sort(filesystems.begin(), filesystems.end());
 	entries_info = std::move(filesystems);
 
-	return std::move(result);
+	return result;
 }
 
 void ListFileSystemQueryTableFunc(ClientContext &context, TableFunctionInput &data_p, DataChunk &output) {
@@ -69,14 +70,13 @@ void ListFileSystemQueryTableFunc(ClientContext &context, TableFunctionInput &da
 	idx_t count = 0;
 	while (data.offset < data.registered_filesystems.size() && count < STANDARD_VECTOR_SIZE) {
 		auto &entry = data.registered_filesystems[data.offset++];
-		idx_t col = 0;
 
-		// Registerd filesystem.
-		output.SetValue(col++, count, entry);
+		// Registered filesystem.
+		output.data[0].Append(Value(entry));
 
 		count++;
 	}
-	output.SetCardinality(count);
+	output.CheckCardinality(count);
 }
 
 } // namespace

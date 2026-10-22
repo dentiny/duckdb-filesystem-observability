@@ -18,15 +18,15 @@ MetricsCollector::MetricsCollector()
 }
 
 LatencyGuardWrapper MetricsCollector::RecordOperationStart(IoOperation io_oper, const string &filepath) {
-	std::lock_guard<std::mutex> lck(mu);
-	return RecordOperationStartWithLock(std::move(io_oper), filepath);
+	annotated_lock_guard<annotated_mutex> lck(mu);
+	return RecordOperationStartWithLock(io_oper, filepath);
 }
 
 LatencyGuardWrapper MetricsCollector::RecordOperationStart(IoOperation io_oper, const string &filepath,
                                                            int64_t bytes_to_read) {
-	std::lock_guard<std::mutex> lck(mu);
+	annotated_lock_guard<annotated_mutex> lck(mu);
 	operation_size_collector->RecordOperationSize(io_oper, bytes_to_read);
-	return RecordOperationStartWithLock(std::move(io_oper), filepath);
+	return RecordOperationStartWithLock(io_oper, filepath);
 }
 
 LatencyGuardWrapper MetricsCollector::RecordOperationStartWithLock(IoOperation io_oper, const string &filepath) {
@@ -49,7 +49,7 @@ LatencyGuardWrapper MetricsCollector::RecordOperationStartWithLock(IoOperation i
 }
 
 string MetricsCollector::GetHumanReadableStats() {
-	std::lock_guard<std::mutex> lck(mu);
+	annotated_lock_guard<annotated_mutex> lck(mu);
 
 	string human_readable_stats;
 
@@ -75,7 +75,7 @@ string MetricsCollector::GetHumanReadableStats() {
 }
 
 void MetricsCollector::Reset() {
-	std::lock_guard<std::mutex> lck(mu);
+	annotated_lock_guard<annotated_mutex> lck(mu);
 	overall_latency_collector = make_uniq<OperationLatencyCollector>();
 	bucket_latency_collector.clear();
 }

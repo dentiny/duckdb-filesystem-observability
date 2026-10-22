@@ -12,27 +12,15 @@ set(OBSERVEFS_UNITTEST_OBJECTS
 
 add_executable(unittest_observefs ${OBSERVEFS_UNITTEST_OBJECTS})
 
-if(NOT WIN32
-   AND NOT SUN
-   AND NOT ZOS)
-  target_link_libraries(
-    unittest_observefs
-    test_helpers
-    duckdb
-    ${EXTENSION_NAME}
-    OpenSSL::SSL
-    OpenSSL::Crypto
-    CURL::libcurl)
-else()
-  target_link_libraries(
-    unittest_observefs
-    test_helpers
-    duckdb_static
-    ${EXTENSION_NAME}
-    OpenSSL::SSL
-    OpenSSL::Crypto
-    CURL::libcurl)
-endif()
+target_link_libraries(
+  unittest_observefs
+  test_helpers
+  ${EXTENSION_NAME}
+  duckdb_static
+  OpenSSL::SSL
+  OpenSSL::Crypto
+  CURL::libcurl)
+link_extension_libraries(unittest_observefs "")
 
 if(MINGW OR WIN32)
   target_link_libraries(unittest_observefs crypt32)

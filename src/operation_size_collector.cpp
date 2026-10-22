@@ -1,14 +1,10 @@
 #include "operation_size_collector.hpp"
 
 #include "duckdb/common/string_util.hpp"
-#include "no_destructor.hpp"
 
 namespace duckdb {
 
 namespace {
-const NoDestructor<string> SIZE_HISTOGRAM_ITEM {"request_size"};
-const NoDestructor<string> SIZE_HISTOGRAM_UNIT {""};
-
 // Heuristic estimation for request size.
 constexpr double MIN_REQUEST_SIZE = 0;
 constexpr double MAX_REQUEST_SIZE = 6 * 1024 * 1024;
@@ -22,12 +18,12 @@ OperationSizeCollector::OperationSizeCollector() {
 }
 
 void OperationSizeCollector::RecordOperationSize(IoOperation io_oper, int64_t request_size) {
-	std::lock_guard<std::mutex> lck(mu);
+	annotated_lock_guard<annotated_mutex> lck(mu);
 	request_size_histograms[static_cast<idx_t>(io_oper)]->Add(request_size);
 }
 
 string OperationSizeCollector::GetHumanReadableStats() {
-	std::lock_guard<std::mutex> lck(mu);
+	annotated_lock_guard<annotated_mutex> lck(mu);
 	string stats;
 
 	// Record IO operation size.
@@ -37,7 +33,7 @@ string OperationSizeCollector::GetHumanReadableStats() {
 		if (cur_histogram->counts() == 0) {
 			continue;
 		}
-		stats += StringUtil::Format("\n%s operation histogram is %s", OPER_NAMES[cur_oper_idx],
+		stats += StringUtil::Format("\n%s operation histogram is %s", OPER_NAMES[cur_oper_idx].data(),
 		                            cur_histogram->FormatString());
 	}
 

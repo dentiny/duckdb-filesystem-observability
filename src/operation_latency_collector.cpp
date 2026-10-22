@@ -1,7 +1,7 @@
 #include "operation_latency_collector.hpp"
 
 #include "duckdb/common/string_util.hpp"
-#include "no_destructor.hpp"
+#include <string_view>
 #include "time_utils.hpp"
 
 namespace duckdb {
@@ -20,8 +20,8 @@ const std::array<LatencyHeuristic, static_cast<size_t>(IoOperation::kUnknown)> k
 }};
 
 namespace {
-const NoDestructor<string> LATENCY_HISTOGRAM_ITEM {"latency"};
-const NoDestructor<string> LATENCY_HISTOGRAM_UNIT {"millisec"};
+constexpr std::string_view LATENCY_HISTOGRAM_ITEM = "latency";
+constexpr std::string_view LATENCY_HISTOGRAM_UNIT = "millisec";
 } // namespace
 
 LatencyGuard::LatencyGuard(OperationLatencyCollector &latency_collector_p, IoOperation io_operation_p)
@@ -40,9 +40,10 @@ OperationLatencyCollector::OperationLatencyCollector() {
 		const auto &heuristic = kLatencyHeuristics[i];
 		latency_collector[i].histogram =
 		    make_uniq<Histogram>(heuristic.min_latency_ms, heuristic.max_latency_ms, heuristic.num_buckets);
-		latency_collector[i].histogram->SetStatsDistribution(*LATENCY_HISTOGRAM_ITEM, *LATENCY_HISTOGRAM_UNIT);
+		latency_collector[i].histogram->SetStatsDistribution(string(LATENCY_HISTOGRAM_ITEM),
+		                                                     string(LATENCY_HISTOGRAM_UNIT));
 		latency_collector[i].quantile_estimator =
-		    make_uniq<QuantileEstimator>(*LATENCY_HISTOGRAM_ITEM, *LATENCY_HISTOGRAM_UNIT);
+		    make_uniq<QuantileEstimator>(string(LATENCY_HISTOGRAM_ITEM), string(LATENCY_HISTOGRAM_UNIT));
 	}
 }
 
@@ -51,7 +52,7 @@ LatencyGuard OperationLatencyCollector::RecordOperationStart(IoOperation io_oper
 }
 
 void OperationLatencyCollector::RecordOperationEnd(IoOperation io_oper, int64_t latency_millisec) {
-	std::lock_guard<std::mutex> lck(latency_collector_mu);
+	annotated_lock_guard<annotated_mutex> lck(latency_collector_mu);
 	auto &cur_histogram = latency_collector[static_cast<idx_t>(io_oper)].histogram;
 	cur_histogram->Add(latency_millisec);
 	auto &cur_quantile_estimator = latency_collector[static_cast<idx_t>(io_oper)].quantile_estimator;
@@ -59,7 +60,7 @@ void OperationLatencyCollector::RecordOperationEnd(IoOperation io_oper, int64_t 
 }
 
 string OperationLatencyCollector::GetHumanReadableStats() {
-	std::lock_guard<std::mutex> lck(latency_collector_mu);
+	annotated_lock_guard<annotated_mutex> lck(latency_collector_mu);
 	string stats;
 
 	// Record IO operation latency.
@@ -69,12 +70,12 @@ string OperationLatencyCollector::GetHumanReadableStats() {
 		if (cur_histogram->counts() == 0) {
 			continue;
 		}
-		stats += StringUtil::Format("\n\n%s operation histogram is %s", OPER_NAMES[cur_oper_idx],
+		stats += StringUtil::Format("\n\n%s operation histogram is %s", OPER_NAMES[cur_oper_idx].data(),
 		                            cur_histogram->FormatString());
 
 		// Check important quantiles.
 		auto &cur_quantile_estimator = latency_collector[static_cast<idx_t>(cur_oper_idx)].quantile_estimator;
-		stats += StringUtil::Format("\n%s operation quantile is %s", OPER_NAMES[cur_oper_idx],
+		stats += StringUtil::Format("\n%s operation quantile is %s", OPER_NAMES[cur_oper_idx].data(),
 		                            cur_quantile_estimator->FormatString());
 	}
 
