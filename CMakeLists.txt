@@ -3,9 +3,7 @@ cmake_minimum_required(VERSION 3.5...3.29)
 # Set extension name here
 set(TARGET_NAME observefs)
 
-if(NOT CMAKE_CXX_STANDARD OR CMAKE_CXX_STANDARD LESS 17)
-  set(CMAKE_CXX_STANDARD 17)
-endif()
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Override DuckDB encryption library, mimics httpfs extension behavior.

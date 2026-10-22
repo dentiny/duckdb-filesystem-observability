@@ -52,10 +52,10 @@ void ExternalFileCacheAccessFunc(ClientContext &context, TableFunctionInput &dat
 	data.emitted = true;
 
 	// Start filling in the result buffer.
-	output.SetValue(/*col_idx=*/0, /*index=*/0, Value::UBIGINT(data.cache_access_record.hit_count));
-	output.SetValue(/*col_idx=*/1, /*index=*/0, Value::UBIGINT(data.cache_access_record.miss_count));
-	output.SetValue(/*col_idx=*/2, /*index=*/0, Value::UBIGINT(data.cache_access_record.partial_hit_count));
-	output.SetCardinality(/*count=*/1);
+	output.data[0].Append(Value::UBIGINT(data.cache_access_record.hit_count));
+	output.data[1].Append(Value::UBIGINT(data.cache_access_record.miss_count));
+	output.data[2].Append(Value::UBIGINT(data.cache_access_record.partial_hit_count));
+	output.CheckCardinality(1);
 }
 } // namespace
 

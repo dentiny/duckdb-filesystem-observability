@@ -70,14 +70,13 @@ void ListFileSystemQueryTableFunc(ClientContext &context, TableFunctionInput &da
 	idx_t count = 0;
 	while (data.offset < data.registered_filesystems.size() && count < STANDARD_VECTOR_SIZE) {
 		auto &entry = data.registered_filesystems[data.offset++];
-		idx_t col = 0;
 
-		// Registerd filesystem.
-		output.SetValue(col++, count, entry);
+		// Registered filesystem.
+		output.data[0].Append(Value(entry));
 
 		count++;
 	}
-	output.SetCardinality(count);
+	output.CheckCardinality(count);
 }
 
 } // namespace
