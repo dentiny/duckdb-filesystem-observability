@@ -2,6 +2,7 @@
 
 ## Fixed
 
+- Make the external-cache SQL regression independent of CSV read splitting while checking cold misses and exact counter preservation when recording is disabled.
 - Declare the database-instance type directly, pass typed scalar result counts, and allow normal execution errors from filesystem/state validation on DuckDB v2.
 
 ## Changed

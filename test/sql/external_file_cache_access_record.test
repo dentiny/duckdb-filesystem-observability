@@ -13,14 +13,20 @@ SELECT * FROM observefs_external_file_cache_access_record();
 ----
 0	0	0
 
-# Perform an IO operation and re-check cache stats; inititially all cache miss.
+# Perform an IO operation and re-check cache stats; initially all cache misses.
 statement ok
 SELECT COUNT(*) FROM read_csv_auto('https://raw.githubusercontent.com/dentiny/duck-read-cache-fs/refs/heads/main/test/data/stock-exchanges.csv');
 
+# The number of reads depends on DuckDB's CSV reader; require cold misses without fixing that count.
 query III
-SELECT * FROM observefs_external_file_cache_access_record();
+SELECT "cache hit count", "cache miss count" > 0, "cache partial hit"
+FROM observefs_external_file_cache_access_record();
 ----
-0	2	0
+0	true	0
+
+statement ok
+CREATE TEMP TABLE cache_access_before_disable AS
+SELECT * FROM observefs_external_file_cache_access_record();
 
 # Disable the cache access record, so records won't get changed.
 statement ok
@@ -29,7 +35,11 @@ SET observefs_enable_external_file_cache_stats=false;
 statement ok
 SELECT COUNT(*) FROM read_csv_auto('https://raw.githubusercontent.com/dentiny/duck-read-cache-fs/refs/heads/main/test/data/stock-exchanges.csv');
 
+# Compare every counter with its actual value before recording was disabled.
 query III
-SELECT * FROM observefs_external_file_cache_access_record();
+SELECT current."cache hit count" = previous."cache hit count",
+       current."cache miss count" = previous."cache miss count",
+       current."cache partial hit" = previous."cache partial hit"
+FROM observefs_external_file_cache_access_record() AS current, cache_access_before_disable AS previous;
 ----
-0	2	0
+true	true	true
