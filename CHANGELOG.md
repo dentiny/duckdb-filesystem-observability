@@ -6,6 +6,7 @@
 - Require C++17 and use identifiers for SQL output names and extension settings.
 - Use DuckDB annotated mutexes for collector state and C++17 string views and type traits.
 - Adapt filesystem registration, extension loading, and scalar result APIs to DuckDB v2.
+- Preserve documented SQL parameter names through function signatures while keeping positional-only binding.
 - Follow the current httpfs source layout and link native certificate frameworks on macOS.
 
 # 0.5.4

@@ -1,5 +1,6 @@
 #include "observefs_functions.hpp"
 
+#include "duckdb/common/identifier.hpp"
 #include "duckdb/common/opener_file_system.hpp"
 #include "duckdb/main/client_context.hpp"
 #include "duckdb/main/database.hpp"
@@ -92,13 +93,23 @@ FunctionDescription GetFunctionDescription(vector<LogicalType> parameter_types, 
 	return result;
 }
 
+// Publish documented parameter names through the signature without changing positional-only binding.
+void SetParameterNames(FunctionSignature &signature, const FunctionDescription &description) {
+	D_ASSERT(signature.GetParameterCount() == description.parameter_names.size());
+	for (idx_t index = 0; index < description.parameter_names.size(); ++index) {
+		signature.GetParameter(index).SetName(Identifier(description.parameter_names[index]));
+	}
+}
+
 void RegisterScalarFunction(ExtensionLoader &loader, ScalarFunction function, FunctionDescription description) {
+	SetParameterNames(function.GetSignature(), description);
 	CreateScalarFunctionInfo info(std::move(function));
 	info.descriptions.emplace_back(std::move(description));
 	loader.RegisterFunction(std::move(info));
 }
 
 void RegisterTableFunction(ExtensionLoader &loader, TableFunction function, FunctionDescription description) {
+	SetParameterNames(function.GetSignature(), description);
 	CreateTableFunctionInfo info(std::move(function));
 	info.descriptions.emplace_back(std::move(description));
 	loader.RegisterFunction(std::move(info));
