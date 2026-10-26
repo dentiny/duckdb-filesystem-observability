@@ -1,0 +1,46 @@
+# name: test/sql/wrap_filesystem_idempotent.test
+# description: filesystem wrapping is volatile and safe to repeat.
+# group: [sql]
+
+require observefs
+
+query TI
+SELECT stability, has_side_effects FROM duckdb_functions()
+WHERE function_name = 'observefs_wrap_filesystem';
+----
+VOLATILE	true
+
+# Planning must not mutate the filesystem registry.
+statement ok
+PREPARE wrap_filesystem AS SELECT observefs_wrap_filesystem('observefs_fake_filesystem');
+
+query I
+SELECT COUNT(*) FROM observefs_list_registered_filesystems() WHERE registered_filesystems = 'observefs_fake_filesystem';
+----
+1
+
+query I
+EXECUTE wrap_filesystem;
+----
+true
+
+# Re-executing the same statement must reuse the existing wrapper.
+query I
+EXECUTE wrap_filesystem;
+----
+true
+
+query I
+SELECT observefs_wrap_filesystem('observefs_fake_filesystem');
+----
+true
+
+query I
+SELECT COUNT(*) FROM observefs_list_registered_filesystems() WHERE registered_filesystems = 'observability-observefs_fake_filesystem';
+----
+1
+
+statement error
+SELECT observefs_wrap_filesystem('unregistered_filesystem');
+----
+Filesystem unregistered_filesystem hasn't been registered yet!

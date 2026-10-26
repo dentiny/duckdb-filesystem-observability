@@ -1,5 +1,7 @@
 #include "observefs_functions.hpp"
 
+#include <algorithm>
+
 #include "duckdb/common/identifier.hpp"
 #include "duckdb/common/opener_file_system.hpp"
 #include "duckdb/main/client_context.hpp"
@@ -66,6 +68,13 @@ void WrapFileSystem(const DataChunk &args, ExpressionState &state, Vector &resul
 	auto &vfs = opener_filesystem.GetFileSystem();
 	auto internal_filesystem = vfs.ExtractSubSystem(filesystem_name);
 	if (internal_filesystem == nullptr) {
+		// Repeating a wrap keeps the existing wrapper and its collected metrics.
+		const auto wrapped_name = StringUtil::Format("observability-%s", filesystem_name);
+		const auto registered = vfs.ListSubSystems();
+		if (std::find(registered.begin(), registered.end(), wrapped_name) != registered.end()) {
+			result.Reference(Value(SUCCESS), count_t(args.size()));
+			return;
+		}
 		throw InvalidInputException("Filesystem %s hasn't been registered yet!", filesystem_name);
 	}
 
@@ -133,9 +142,12 @@ void RegisterObservefsFunctions(ExtensionLoader &loader) {
 	                      GetFunctionDescription({}, {}, "Lists the filesystem implementations registered with DuckDB.",
 	                                             "observefs_list_registered_filesystems()"));
 
+	// Wrapping changes the filesystem registry and must not run during constant folding.
+	ScalarFunction wrap_function("observefs_wrap_filesystem", {LogicalTypeId::VARCHAR}, LogicalTypeId::BOOLEAN,
+	                             WrapFileSystem);
+	wrap_function.SetVolatile();
 	RegisterScalarFunction(
-	    loader,
-	    ScalarFunction("observefs_wrap_filesystem", {LogicalTypeId::VARCHAR}, LogicalTypeId::BOOLEAN, WrapFileSystem),
+	    loader, std::move(wrap_function),
 	    GetFunctionDescription({LogicalTypeId::VARCHAR}, {"filesystem_name"},
 	                           "Wraps a registered filesystem with I/O observability instrumentation.",
 	                           "observefs_wrap_filesystem('AzureBlobStorageFileSystem')"));
