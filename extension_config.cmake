@@ -3,7 +3,7 @@
 
 # Extension from this repo
 duckdb_extension_load(observefs SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}
-                      EXTENSION_VERSION 0.6.0 LOAD_TESTS)
+                      EXTENSION_VERSION 0.6.1 LOAD_TESTS)
 
 # Any extra extensions that should be built e.g.: duckdb_extension_load(json)
 
