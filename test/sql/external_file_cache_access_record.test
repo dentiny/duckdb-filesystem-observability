@@ -13,14 +13,20 @@ SELECT * FROM observefs_external_file_cache_access_record();
 ----
 0	0	0
 
-# Perform an IO operation and re-check cache stats; inititially all cache miss.
+# Perform an IO operation and re-check cache stats; initially all accesses miss.
+# The CSV reader may issue a different number of underlying reads across versions.
 statement ok
 SELECT COUNT(*) FROM read_csv_auto('https://raw.githubusercontent.com/dentiny/duck-read-cache-fs/refs/heads/main/test/data/stock-exchanges.csv');
 
 query III
-SELECT * FROM observefs_external_file_cache_access_record();
+SELECT hits = 0, misses > 0, partial_hits = 0
+FROM observefs_external_file_cache_access_record() AS stats(hits, misses, partial_hits);
 ----
-0	2	0
+true	true	true
+
+statement ok
+CREATE TEMP TABLE cache_access_before_disable AS
+SELECT * FROM observefs_external_file_cache_access_record() AS stats(hits, misses, partial_hits);
 
 # Disable the cache access record, so records won't get changed.
 statement ok
@@ -30,6 +36,10 @@ statement ok
 SELECT COUNT(*) FROM read_csv_auto('https://raw.githubusercontent.com/dentiny/duck-read-cache-fs/refs/heads/main/test/data/stock-exchanges.csv');
 
 query III
-SELECT * FROM observefs_external_file_cache_access_record();
+SELECT observed.hits = baseline.hits,
+       observed.misses = baseline.misses,
+       observed.partial_hits = baseline.partial_hits
+FROM observefs_external_file_cache_access_record() AS observed(hits, misses, partial_hits)
+CROSS JOIN cache_access_before_disable AS baseline;
 ----
-0	2	0
+true	true	true

@@ -1,3 +1,11 @@
+## Unreleased
+
+### Fixed
+
+- Align the extension-version regression with v0.6.1.
+- Verify cache misses and disabled-counter stability without hard-coding the
+  CSV reader's underlying read count.
+
 ## 0.6.1 - 2026-11-23
 
 ### Changed
